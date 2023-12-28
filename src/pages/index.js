@@ -7,7 +7,7 @@ export default function Home() {
         <h1 className="text-6xl font-bold mb-6">Welcome to Mirrored</h1>
 
         <div className="flex flex-wrap items-center justify-around max-w-4xl mt-6">
-          <Link href="/generate-opposite-playlist" passHref>
+          <Link href="/generate_opposite_playlist" passHref>
             <div className="p-6 mt-6 text-left border border-spotify-green w-96 rounded-xl hover:text-spotify-black hover:bg-spotify-green cursor-pointer">
               <h2 className="text-2xl">Generate Opposite Playlist &rarr;</h2>
             </div>
