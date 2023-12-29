@@ -2,6 +2,10 @@ const { getSpotifyRecommendations,fetchArtistId, fetchSpotifyGeneratedPlaylists,
 const { spawn } = require('child_process');
 
 const fs = require('fs');
+import { fetchCsvData } from '../../utils/fetchJSON';
+
+
+
 
 // Helper function to calculate cosine similarity (you'll need to write this part)
 const cosineSimilarity = (vecA, vecB) => {
@@ -54,21 +58,21 @@ artistIds.forEach(artistId => {
 return [...new Set(allOpposites)];
 };
   
-const findOppositeArtists = (filePath, artistIds, n) => {
+const findOppositeArtists = (file, artistIds, n) => {
 return new Promise((resolve, reject) => {
-    fs.readFile(filePath, 'utf8', (err, jsonString) => {
-    if (err) {
-        reject("Error reading file: " + err);
-    } else {
+    // fs.readFile(filePath, 'utf8', (err, jsonString) => {
+    // if (err) {
+    //     reject("Error reading file: " + err);
+    // } else {
         try {
-        const data = JSON.parse(jsonString);
+        const data = JSON.parse(file);
         const opposites = findOpposite(artistIds, data, n);
         resolve(opposites);
         } catch (error) {
         reject('Error parsing JSON: ' + error);
         }
-    }
-    });
+    // }
+    // });
 });
 };
   
@@ -149,14 +153,18 @@ async function getOppositePlaylistRecommendations(tracks, limit = 15) {
 
     const ids = packedArtistIds.map(artist => artist[0].id)
     
-    // var oppositeIds = []
-    const path = require('path');
-    const scriptDir = __dirname; // Directory where the current script is located
+    // // var oppositeIds = []
+    // const path = require('path');
+    // const scriptDir = __dirname; // Directory where the current script is located
 
-    const csvFilePath = path.join(scriptDir, 'artist_avg_features.json');
+    // const csvFilePath = path.join(scriptDir, 'artist_avg_features.json');
 
+    const jsonData = await fetchCsvData()
 
-    const opposites = await findOppositeArtists(csvFilePath, ids, 5);
+    // const jsonData = await response.json();
+    const data = JSON.parse(jsonData);
+
+    const opposites = findOpposite(ids,data, 5);
 
     // .then(result => {
     //   // console.log('Result from Python script:', result);
