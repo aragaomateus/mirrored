@@ -21,17 +21,17 @@ export default function GenerateOppositePlaylist() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       // Update the endpoint as necessary based on your API route setup
       const response = await fetch(`/api/playlists?username=${encodeURIComponent(username)}&type=${playlistType}`);
-      if (!response.ok) throw new Error('Network response was not ok.');
+      if (!response.ok) throw new Error("Network response was not ok.");
 
       const data = await response.json();
       setPlaylists(data);
     } catch (err) {
-      setError('Failed to fetch playlists: ' + err.message);
+      setError("Failed to fetch playlists: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -44,7 +44,7 @@ export default function GenerateOppositePlaylist() {
     try {
       // Update the endpoint as necessary based on your API route setup
       const response = await fetch(`/api/recommendations?uri=${encodeURIComponent(event)}`);
-      if (!response.ok) throw new Error('Network response was not ok.');
+      if (!response.ok) throw new Error("Network response was not ok.");
 
       const data = await response.json();
       setRecommendations(data);
