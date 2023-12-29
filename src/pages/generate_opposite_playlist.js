@@ -5,6 +5,7 @@ export default function GenerateOppositePlaylist() {
   const [username, setUsername] = useState('');
   const [playlistType, setPlaylistType] = useState('user');
   const [playlists, setPlaylists] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -28,6 +29,24 @@ export default function GenerateOppositePlaylist() {
 
       const data = await response.json();
       setPlaylists(data);
+    } catch (err) {
+      setError('Failed to fetch playlists: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePlaylistSelection = async (event) =>{
+    setLoading(true);
+    setError('');
+
+    try {
+      // Update the endpoint as necessary based on your API route setup
+      const response = await fetch(`/api/recommendations?uri=${encodeURIComponent(event)}`);
+      if (!response.ok) throw new Error('Network response was not ok.');
+
+      const data = await response.json();
+      setRecommendations(data);
     } catch (err) {
       setError('Failed to fetch playlists: ' + err.message);
     } finally {
@@ -97,6 +116,7 @@ export default function GenerateOppositePlaylist() {
         </form>
 
         {error && <p className="text-red-500">{error}</p>}
+
         {loading ? (
         <p>Loading playlists...</p>
       ) : (
@@ -107,7 +127,7 @@ export default function GenerateOppositePlaylist() {
                 <button
                   key={index}
                   className="playlist bg-black hover:bg-opacity-80 text-white py-1 px-2 text-sm rounded shadow"
-                  onClick={() => handlePlaylistSelection(playlist)} // Define this function to handle click
+                  onClick={() => handlePlaylistSelection(playlist.uri)} // Define this function to handle click
                 >
                   {playlist.name}
                 </button>
@@ -117,9 +137,27 @@ export default function GenerateOppositePlaylist() {
         )
       )}
 
-        <div className="placeholder-generated-playlist">
-          <p>The generated opposite playlist will be shown here...</p>
-        </div>
+<div className="placeholder-generated-playlist bg-spotify-black text-spotify-white p-4 rounded-lg">
+  <h2 className="text-xl font-bold mb-4">Generated Opposite Playlist</h2>
+  <div className="playlist-list">
+    {recommendations.map((recommendation, index) => (
+      <div className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
+      <img 
+        src={recommendation.album_cover} 
+        alt={recommendation.name} 
+        className="w-16 h-16 object-cover rounded mr-2" // Smaller images
+      />
+      <div>
+        <p className="text-sm">{recommendation.name} by {recommendation.artist}</p>
+        {/* Remove the separate artist line for conciseness */}
+      </div>
+    </div>
+    
+    ))}
+  </div>
+</div>
+
+
       </main>
     </div>
   );

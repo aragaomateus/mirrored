@@ -147,11 +147,140 @@ async function fetchUserPlaylists(username) {
 
     return playlists;
 }
+async function getAudioFeaturesForTracks(trackIds) {
+    const accessToken = await refreshAccessToken();
+
+    const ids = trackIds.join(',');
+    const limit = 50; // or whatever number suits your needs
+    const offset = 0;
+
+    const endpoint = `https://api.spotify.com/v1/audio-features?limit=${limit}&offset=${offset}&ids=${ids}`;
+
+    const response = await fetch(endpoint, {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error fetching audio features: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.audio_features;
+}
+
+async function fetchAudioFeaturesForPlaylist(playlistURI) {
+    const accessToken = await refreshAccessToken();
+    console.log(playlistURI)
+    // Extracting the playlist ID from the full URI
+    const playlistId = playlistURI.split(':')[2];
+    
+    // Constructing the endpoint to fetch tracks from the playlist
+    const limit = 50; // or whatever number suits your needs
+    const offset = 0;
+    try {
+        const endpoint = `https://api.spotify.com/v1/playlists/${playlistId}/tracks`;
+        const response = await fetch(`${endpoint}?limit=${limit}&offset=${offset}`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+        const playlistsData = await response.json();
+
+        if (!playlistsData || !playlistsData.items) {
+            console.log(`Couldn't fetch tracks for playlist ID: ${playlistId}. Skipping.`);
+            return [];
+        }
+
+        const trackIds = playlistsData.items.map(item => item.track.id);
+        const featuresList = await getAudioFeaturesForTracks(trackIds);
+
+        return featuresList;
+    } catch (error) {
+        console.error(`Error fetching audio features for playlist: ${error}`);
+        return [];
+    }
+}
+async function fetchArtistId(trackId) {
+    const accessToken = await refreshAccessToken();
+
+    // Extracting the playlist ID from the full URI
+    
+    // Constructing the endpoint to fetch tracks from the playlist
+    const limit = 50; // or whatever number suits your needs
+    const offset = 0;
+    try {
+        const endpoint = `https://api.spotify.com/v1/tracks/${trackId}`;
+        const response = await fetch(`${endpoint}?limit=${limit}&offset=${offset}`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+        const data = await response.json();
+        if (!data || !data.artists) {
+            console.log(`Couldn't fetch tracks for playlist ID: ${trackId}. Skipping.`);
+            return [];
+        }
+
+        return data.artists;
+    } catch (error) {
+        console.error(`Error fetching audio features for playlist: ${error}`);
+        return [];
+    }
+}
+
+async function getSpotifyRecommendations(oppositesSeeds, params) {
+    const accessToken = await refreshAccessToken();
+    const queryParams = new URLSearchParams({
+        seed_artists: oppositesSeeds.map(id => id.trim()).join(','),
+        ...params, // Spread the other parameters like target_danceability, target_energy, etc.
+    }).toString();
+
+    const endpoint = `https://api.spotify.com/v1/recommendations?${queryParams}`;
+    console.log(endpoint)
+
+    try {
+        const response = await fetch(endpoint, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text(); // or response.json() if response returns JSON
+            console.error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}, details: ${errorText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // const data = await response.json();
+        // data.tracks.forEach(track=>{
+        //     console.log(track.name);
+        //     console.log(track.album.images);
+        // });
+        return data.tracks.map(track => ({
+            name: track.name,
+            artist: track.artists[0].name,
+            popularity: track.popularity,
+            uri: track.uri,
+            album_cover : track.album.images[1].url
+        }));
+
+    } catch (error) {
+        console.error(`Error fetching recommendations: ${error}`);
+        return [];
+    }
+}
+
 
 // Exporting the functions to be used in other files
 module.exports = {
     fetchSpotifyData,
     fetchSpotifyGeneratedPlaylists,
     fetchUserPlaylists,
-    refreshAccessToken
+    refreshAccessToken,
+    fetchAudioFeaturesForPlaylist,
+    fetchArtistId,
+    getSpotifyRecommendations
 };
+
