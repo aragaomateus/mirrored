@@ -13,7 +13,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link href="/find-sound-similarity" passHref>
+          <Link href="/find_sound_similarity" passHref>
             <div className="p-6 mt-6 text-left border border-spotify-green w-96 rounded-xl hover:text-spotify-black hover:bg-spotify-green cursor-pointer">
               <h2 className="text-2xl">Find Out Sound Similarity &rarr;</h2>
             </div>

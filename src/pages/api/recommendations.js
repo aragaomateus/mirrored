@@ -1,6 +1,76 @@
 const { getSpotifyRecommendations,fetchArtistId, fetchSpotifyGeneratedPlaylists, fetchUserPlaylists,fetchAudioFeaturesForPlaylist } = require('../../utils/spotifyAPI');
 const { spawn } = require('child_process');
 
+const fs = require('fs');
+
+// Helper function to calculate cosine similarity (you'll need to write this part)
+const cosineSimilarity = (vecA, vecB) => {
+    let dotProduct = 0;
+    let magnitudeA = 0;
+    let magnitudeB = 0;
+  
+    for (let i = 0; i < vecA.length; i++) {
+      dotProduct += vecA[i] * vecB[i];  // Sum of the product of each dimension
+      magnitudeA += vecA[i] * vecA[i];  // Sum of squares of vector A
+      magnitudeB += vecB[i] * vecB[i];  // Sum of squares of vector B
+    }
+  
+    magnitudeA = Math.sqrt(magnitudeA); // Square root of sum of squares (magnitude) for A
+    magnitudeB = Math.sqrt(magnitudeB); // Square root of sum of squares (magnitude) for B
+  
+    if (magnitudeA && magnitudeB) {
+      return dotProduct / (magnitudeA * magnitudeB); // Cosine similarity
+    } else {
+      return 0;
+    }
+  };
+  
+
+const findOpposite = (artistIds, data, n = 5) => {
+let allOpposites = [];
+
+artistIds.forEach(artistId => {
+    if (!artistId || artistId.length <= 'undefined'.length || !data[artistId]) {
+    console.log(`Invalid or missing data for artistId: '${artistId}'`);
+    return;
+    }
+
+    const artistFeatures = Object.values(data[artistId]);
+    let distances = [];
+
+    for (const [id, features] of Object.entries(data)) {
+    if (id !== artistId && id.length > 'undefined'.length) {
+        const featureValues = Object.values(features);
+        const distance = cosineSimilarity(artistFeatures, featureValues);
+        distances.push({ id, distance });
+    }
+    }
+
+    distances.sort((a, b) => a.distance - b.distance);
+    allOpposites.push(...distances.slice(0, n).map(item => item.id));
+});
+
+// Filter for unique artist IDs
+return [...new Set(allOpposites)];
+};
+  
+const findOppositeArtists = (filePath, artistIds, n) => {
+return new Promise((resolve, reject) => {
+    fs.readFile(filePath, 'utf8', (err, jsonString) => {
+    if (err) {
+        reject("Error reading file: " + err);
+    } else {
+        try {
+        const data = JSON.parse(jsonString);
+        const opposites = findOpposite(artistIds, data, n);
+        resolve(opposites);
+        } catch (error) {
+        reject('Error parsing JSON: ' + error);
+        }
+    }
+    });
+});
+};
   
 function calculateCentroid(tracks, features) {
     const centroid = {};
@@ -24,34 +94,34 @@ function average(array) {
 
 const path = require('path');
 
-async function runPythonScript(artistIds) {
-    return new Promise((resolve, reject) => {
-        // Construct the path to the Python file
-        const pythonFilePath = path.join(__dirname, '../../../../src/pages/api/find_opposite.py');
+// async function runPythonScript(artistIds) {
+//     return new Promise((resolve, reject) => {
+//         // Construct the path to the Python file
+//         const pythonFilePath = path.join(__dirname, '../../../../src/pages/api/find_opposite.py');
 
-        const pythonProcess = spawn('python3', [pythonFilePath, JSON.stringify(artistIds)]);
+//         const pythonProcess = spawn('python3', [pythonFilePath, JSON.stringify(artistIds)]);
 
-        let scriptOutput = '';
-        pythonProcess.stdout.on('data', (data) => {
-            scriptOutput += data.toString();
-        });
+//         let scriptOutput = '';
+//         pythonProcess.stdout.on('data', (data) => {
+//             scriptOutput += data.toString();
+//         });
 
-        pythonProcess.stderr.on('data', (data) => {
-            console.error(`stderr: ${data}`);
-        });
+//         pythonProcess.stderr.on('data', (data) => {
+//             console.error(`stderr: ${data}`);
+//         });
 
-        pythonProcess.on('close', (code) => {
-            console.log(`Python script output: ${scriptOutput}`);
+//         pythonProcess.on('close', (code) => {
+//             console.log(`Python script output: ${scriptOutput}`);
 
-            console.log(`Python script exited with code ${code}`);
-            if (code === 0) {
-                resolve(JSON.parse(scriptOutput));
-            } else {
-                reject(`Python script exited with code ${code}`);
-            }
-        });
-    });
-}
+//             console.log(`Python script exited with code ${code}`);
+//             if (code === 0) {
+//                 resolve(JSON.parse(scriptOutput));
+//             } else {
+//                 reject(`Python script exited with code ${code}`);
+//             }
+//         });
+//     });
+// }
 
 
 async function getArtistIds(closestTracks) {
@@ -80,17 +150,23 @@ async function getOppositePlaylistRecommendations(tracks, limit = 15) {
     const ids = packedArtistIds.map(artist => artist[0].id)
     
     // var oppositeIds = []
+    const path = require('path');
+    const scriptDir = __dirname; // Directory where the current script is located
 
-    const oppositeIds = await runPythonScript(ids)
-    .then(result => {
-      // console.log('Result from Python script:', result);
-      // You can use 'result' here
-      return result
-      // console.log(oppositeIds)
-    })
-    .catch(error => {
-      console.error('Error running Python script:', error);
-    });
+    const csvFilePath = path.join(scriptDir, '../../../../src/pages/api/artist_avg_features.json');
+
+
+    const opposites = await findOppositeArtists(csvFilePath, ids, 5);
+
+    // .then(result => {
+    //   // console.log('Result from Python script:', result);
+    //   // You can use 'result' here
+    //   return result
+    //   // console.log(oppositeIds)
+    // })
+    // .catch(error => {
+    //   console.error('Error running Python script:', error);
+    // });
     const params = {
       target_danceability: 1 - centroid.danceability,
       target_energy: 1 - centroid.energy,
@@ -106,7 +182,7 @@ async function getOppositePlaylistRecommendations(tracks, limit = 15) {
 
   // Example usage
   // Make sure to pass oppositesSeeds, params, and a valid accessToken
-  return getSpotifyRecommendations(oppositeIds,params)
+  return getSpotifyRecommendations(opposites,params)
   .then(playlistRecommendations => {
     return playlistRecommendations;
   })
