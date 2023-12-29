@@ -153,7 +153,7 @@ async function getOppositePlaylistRecommendations(tracks, limit = 15) {
     const path = require('path');
     const scriptDir = __dirname; // Directory where the current script is located
 
-    const csvFilePath = path.join(scriptDir, './src/pages/api/artist_avg_features.json');
+    const csvFilePath = path.join(scriptDir, 'artist_avg_features.json');
 
 
     const opposites = await findOppositeArtists(csvFilePath, ids, 5);
