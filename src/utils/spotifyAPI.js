@@ -253,7 +253,7 @@ async function getSpotifyRecommendations(oppositesSeeds, params) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // const data = await response.json();
+        const data = await response.json();
         // data.tracks.forEach(track=>{
         //     console.log(track.name);
         //     console.log(track.album.images);

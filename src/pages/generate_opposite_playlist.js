@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image'; // Import Next.js Image component
 
 export default function GenerateOppositePlaylist() {
   const [username, setUsername] = useState('');
@@ -48,7 +49,7 @@ export default function GenerateOppositePlaylist() {
       const data = await response.json();
       setRecommendations(data);
     } catch (err) {
-      setError('Failed to fetch playlists: ' + err.message);
+      setError("Failed to fetch playlists: "+ err.message);
     } finally {
       setLoading(false);
     }
@@ -81,7 +82,7 @@ export default function GenerateOppositePlaylist() {
                 id="user-playlists"
                 name="playlist-type"
                 value="user"
-                checked={playlistType === 'user'}
+                checked={playlistType === "user"}
                 onChange={handlePlaylistTypeChange}
                 className="mr-2"
               />
@@ -96,7 +97,7 @@ export default function GenerateOppositePlaylist() {
                 id="spotify-playlists"
                 name="playlist-type"
                 value="spotify"
-                checked={playlistType === 'spotify'}
+                checked={playlistType === "spotify"}
                 onChange={handlePlaylistTypeChange}
                 className="mr-2"
               />
@@ -111,7 +112,7 @@ export default function GenerateOppositePlaylist() {
             className="px-4 py-2 bg-spotify-green rounded hover:bg-spotify-green-darker"
             disabled={loading}
           >
-            {loading ? 'Loading...' : 'Fetch Playlists'}
+            {loading ? "Loading..." : "Fetch Playlists"}
           </button>
         </form>
 
@@ -140,18 +141,19 @@ export default function GenerateOppositePlaylist() {
 <div className="placeholder-generated-playlist bg-spotify-black text-spotify-white p-4 rounded-lg">
   <h2 className="text-xl font-bold mb-4">Generated Opposite Playlist</h2>
   <div className="playlist-list">
-    {recommendations.map((recommendation, index) => (
-      <div className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
-      <img 
-        src={recommendation.album_cover} 
-        alt={recommendation.name} 
-        className="w-16 h-16 object-cover rounded mr-2" // Smaller images
-      />
-      <div>
-        <p className="text-sm">{recommendation.name} by {recommendation.artist}</p>
-        {/* Remove the separate artist line for conciseness */}
-      </div>
-    </div>
+      {recommendations.map((recommendation, index) => (
+          <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
+              <Image 
+                  src={recommendation.album_cover} 
+                  alt={recommendation.name} 
+                  width={64} // Define width
+                  height={64} // Define height
+                  className="object-cover rounded mr-2"
+              />
+              <div>
+                  <p className="text-sm">{`${recommendation.name} by ${recommendation.artist}`}</p>
+              </div>
+          </div>
     
     ))}
   </div>
