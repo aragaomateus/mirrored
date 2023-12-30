@@ -170,15 +170,14 @@ async function getAudioFeaturesForTracks(trackIds) {
     return data.audio_features;
 }
 
-async function fetchAudioFeaturesForPlaylist(playlistURI) {
+async function fetchAudioFeaturesForPlaylist(playlistURI, numberOfTracks = null) {
     const accessToken = await refreshAccessToken();
-    console.log(playlistURI)
-    // Extracting the playlist ID from the full URI
+    console.log(playlistURI);
     const playlistId = playlistURI.split(':')[2];
-    
-    // Constructing the endpoint to fetch tracks from the playlist
-    const limit = 50; // or whatever number suits your needs
+
+    const limit = numberOfTracks || 50;  // If numberOfTracks is provided, use it, otherwise default to 50
     const offset = 0;
+
     try {
         const endpoint = `https://api.spotify.com/v1/playlists/${playlistId}/tracks`;
         const response = await fetch(`${endpoint}?limit=${limit}&offset=${offset}`, {
@@ -202,6 +201,8 @@ async function fetchAudioFeaturesForPlaylist(playlistURI) {
         return [];
     }
 }
+
+
 async function fetchArtistId(trackId) {
     const accessToken = await refreshAccessToken();
 
@@ -272,9 +273,58 @@ async function getSpotifyRecommendations(oppositesSeeds, params) {
     }
 }
 
+const selectPlaylist = (playlists) => {
+    const discoverWeekly = playlists.find(playlist => playlist.name === 'Discover Weekly');
+    if (discoverWeekly) return discoverWeekly;
+  
+    return playlists.reduce((largest, playlist) => {
+      return (largest.totalTracks > playlist.totalTracks) ? largest : playlist;
+    });
+  };
+async function fetchPlaylists(username) {
+    const accessToken = await refreshAccessToken();
+
+    let offset = 0;
+    const limit = 50; // Maximum number of playlists retrievable in one request
+    let playlists = [];
+
+    while (true) {
+        const endpoint = `https://api.spotify.com/v1/users/${username}/playlists`;
+        const response = await fetch(`${endpoint}?limit=${limit}&offset=${offset}`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+        const playlistsData = await response.json();
+
+        if (!playlistsData.items || playlistsData.items.length === 0) {
+            break;
+        }
+
+        playlistsData.items.forEach(playlist => {
+                playlists.push({
+                    name: playlist.name,
+                    uri: playlist.uri,
+                    description: playlist.description || null,
+                    imageUrl: playlist.images.length > 0 ? playlist.images[0].url : null,
+                    public: playlist.public,
+                    totalTracks: playlist.tracks.total,
+                    username: username,
+                    owner: playlist.owner.id
+                });
+        });
+
+        offset += limit;
+    }
+
+    return playlists;
+}
+
 
 // Exporting the functions to be used in other files
 module.exports = {
+    selectPlaylist,
+    fetchPlaylists,
     fetchSpotifyData,
     fetchSpotifyGeneratedPlaylists,
     fetchUserPlaylists,
