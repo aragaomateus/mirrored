@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image'; // Import Next.js Image component
+import { useRouter } from 'next/router';
 
 export default function GenerateOppositePlaylist() {
   const [username, setUsername] = useState('');
@@ -9,7 +10,10 @@ export default function GenerateOppositePlaylist() {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
+  const router = useRouter();
+  const navigateToMainMenu = () => {
+    router.push('/'); // Assuming '/' is your main menu route
+  };
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
   };
@@ -57,6 +61,12 @@ export default function GenerateOppositePlaylist() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
+       <button
+      onClick={navigateToMainMenu}
+      className="fixed top-0 left-0 mt-4 ml-4 px-4 py-2 bg-spotify-green rounded hover:bg-spotify-green-darker text-sm z-10" // Adjusted classes for fixed positioning and size
+    >
+      Back to Main Menu
+    </button>
       <main className="container mx-auto p-4">
         <h1 className="text-3xl font-bold mb-4">Generate Opposite Playlist</h1>
 

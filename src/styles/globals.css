@@ -6,10 +6,24 @@
   --spotify-green: #1DB954;
   --spotify-black: #191414;
   --spotify-white: #ffffff;
+  
 
   --foreground-rgb: 255, 255, 255; /* White text */
   --background-start-rgb: 25, 20, 20; /* Spotify black */
   --background-end-rgb: 25, 20, 20; /* Spotify black for a solid color background */
+}
+.text-spotify-black {
+  color: #191414; /* Assuming this is the Spotify black when hovered */
+}
+/* Additional CSS */
+.tilt-left {
+  display: inline-block;
+  transform: rotate(-10deg);
+}
+
+.tilt-right {
+  display: inline-block;
+  transform: rotate(10deg);
 }
 
 @media (prefers-color-scheme: dark) {

@@ -201,7 +201,7 @@ export default async function handler(req, res) {
         // Finally, compute the Euclidean distance between the two centroids
         const distance = cosineSimilarity(centroidA, centroidB);
         
-        return res.status(200).json({ success: true,distance});
+        return res.status(200).json({ success: true, similarity: distance});
       } catch (error) {
         console.error('API Error:', error);
         return res.status(500).json({ success: false, error: error.message });
