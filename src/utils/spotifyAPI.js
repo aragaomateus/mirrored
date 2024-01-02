@@ -319,10 +319,34 @@ async function fetchPlaylists(username) {
 
     return playlists;
 }
+async function getSpotifyUserInfo(username) {
+    const accessToken = await refreshAccessToken();
+
+
+    try {
+      const response = await fetch(`https://api.spotify.com/v1/users/${encodeURIComponent(username)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        }
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+  
+      const userInfo = await response.json();
+      return userInfo; // This contains the user profile information
+    } catch (error) {
+      console.error('Failed to retrieve user information from Spotify:', error);
+      throw error; // Re-throw the error to handle it in the calling function
+    }
+  }
 
 
 // Exporting the functions to be used in other files
 module.exports = {
+    getSpotifyUserInfo,
     selectPlaylist,
     fetchPlaylists,
     fetchSpotifyData,

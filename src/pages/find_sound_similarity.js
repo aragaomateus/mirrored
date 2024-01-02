@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { fetchPlaylists,fetchPlaylistTracks } from '../utils/spotifyAPI'; // Adjust the import path as needed
 import { useRouter } from 'next/router';
 
 const ProgressBar = ({ similarity, loading }) => {
