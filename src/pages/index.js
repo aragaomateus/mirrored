@@ -25,7 +25,6 @@ export default function Home() {
               <h3 className={buttonStyles}> Find Out Sound Similarity </h3>
             </Link>
             
-            {/* Link to Explore More Features */}
             <Link href="/custom_playlist">
               <h3 className={buttonStyles}> Build Custom Playlist </h3>
             </Link>

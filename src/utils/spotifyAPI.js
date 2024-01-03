@@ -342,10 +342,88 @@ async function getSpotifyUserInfo(username) {
       throw error; // Re-throw the error to handle it in the calling function
     }
   }
+  const searchSpotifyArtist = async (artistName) => {
+    const accessToken = await refreshAccessToken();
+
+    const query = encodeURIComponent(`artist:${artistName}`);
+    const response = await fetch(`https://api.spotify.com/v1/search?q=${query}&type=artist`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+  
+    const data = await response.json();
+    if (data.artists && data.artists.items.length > 0) {
+      const artist = data.artists.items[0];
+      return artist; // Returns the URI of the first matching artist
+    } else {
+      return 'No artist found';
+    }
+  };
+
+  async function createSpotifyPlaylist(userId, playlistName) {
+    const accessToken = await refreshAccessToken();
+
+    const endpoint = `https://api.spotify.com/v1/users/${userId}/playlists`;
+    const headers = {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    };
+    const body = JSON.stringify({
+      name: playlistName,
+      description: 'New playlist description',
+      public: false, // or true, if you want the playlist to be public
+    });
+  
+    try {
+      const response = await fetch(endpoint, { method: 'POST', headers, body });
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${data.error.message}`);
+      }
+  
+      return data; // The response will contain the new playlist's data, including its ID
+    } catch (error) {
+      console.error('Error creating playlist:', error);
+      throw error;
+    }
+  }
+
+  async function addTracksToSpotifyPlaylist(playlistId, trackUris) {
+    const accessToken = await refreshAccessToken();
+
+    const endpoint = `https://api.spotify.com/v1/playlists/${playlistId}/tracks`;
+    const headers = {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    };
+    const body = JSON.stringify({ uris: trackUris });
+  
+    try {
+      const response = await fetch(endpoint, { method: 'POST', headers, body });
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${data.error.message}`);
+      }
+  
+      return data.snapshot_id; // The response contains a snapshot_id that can be used to reference the playlist's current version
+    } catch (error) {
+      console.error('Error adding tracks to playlist:', error);
+      throw error;
+    }
+  }
+  
+  
 
 
 // Exporting the functions to be used in other files
 module.exports = {
+    createSpotifyPlaylist,
+    addTracksToSpotifyPlaylist,
+    searchSpotifyArtist,
     getSpotifyUserInfo,
     selectPlaylist,
     fetchPlaylists,
