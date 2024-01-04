@@ -68,7 +68,7 @@ export default function GenerateOppositePlaylist() {
       Back to Main Menu
     </button>
       <main className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-4">Generate Opposite Playlist</h1>
+        <h1 className="text-3xl font-bold mb-4"> Songs We Know You Will Hate</h1>
 
         <form onSubmit={handleSubmit} className="mb-8">
           <label htmlFor="username" className="block mb-2 text-sm font-bold">

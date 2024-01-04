@@ -2,7 +2,7 @@ const { getSpotifyRecommendations,fetchArtistId, fetchSpotifyGeneratedPlaylists,
 const { spawn } = require('child_process');
 
 const fs = require('fs');
-import { fetchCsvData } from '../../utils/fetchJSON';
+import { fetchJSONData } from '../../utils/fetchJSON';
 
 
 
@@ -159,7 +159,7 @@ async function getOppositePlaylistRecommendations(tracks, limit = 15) {
 
     // const csvFilePath = path.join(scriptDir, 'artist_avg_features.json');
 
-    const jsonData = await fetchCsvData()
+    const jsonData = await fetchJSONData()
 
     // const jsonData = await response.json();
     const data = JSON.parse(jsonData);

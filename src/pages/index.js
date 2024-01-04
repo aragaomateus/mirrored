@@ -17,12 +17,12 @@ export default function Home() {
           <div className="absolute top-1/4 w-full flex flex-col items-center space-y-6">
             {/* Link to Generate Opposite Playlist */}
             <Link href="/generate_opposite_playlist">
-              <h2 className={buttonStyles}> Generate Your Opposite Playlist </h2>
+              <h2 className={buttonStyles}> Find Your Tastebreakers Playlist!</h2>
             </Link>
             
             {/* Link to Find Out Sound Similarity */}
             <Link href="/find_sound_similarity">
-              <h3 className={buttonStyles}> Find Out Sound Similarity </h3>
+              <h3 className={buttonStyles}> Spotify Compatibility Test </h3>
             </Link>
             
             <Link href="/custom_playlist">
