@@ -10,6 +10,7 @@ export default function GenerateOppositePlaylist() {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [originalPlaylist,setOriginalPlaylist] = useState([]);
   const router = useRouter();
   const navigateToMainMenu = () => {
     router.push('/'); // Assuming '/' is your main menu route
@@ -51,13 +52,16 @@ export default function GenerateOppositePlaylist() {
       if (!response.ok) throw new Error("Network response was not ok.");
 
       const data = await response.json();
-      setRecommendations(data);
+      setOriginalPlaylist(data[1])
+      setRecommendations(data[0]);
     } catch (err) {
-      setError("Failed to fetch playlists: "+ err.message);
+      setError("Please Try Again");
+      console.log(err.message)
     } finally {
       setLoading(false);
     }
   };
+  const minLength = Math.min(recommendations.length, originalPlaylist.length)
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
@@ -148,24 +152,67 @@ export default function GenerateOppositePlaylist() {
         )
       )}
 
-<div className="placeholder-generated-playlist bg-spotify-black text-spotify-white p-4 rounded-lg">
-  <h2 className="text-xl font-bold mb-4">Generated Opposite Playlist</h2>
+<div className=" flex-center placeholder-generated-playlist bg-spotify-black text-spotify-white p-4 rounded-lg">
+  <h2 className=" flex-center text-xl font-bold mb-4">Generated Opposite Playlist VS Your Original Playlist</h2>
   <div className="playlist-list">
-      {recommendations.map((recommendation, index) => (
-          <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
-              <Image 
-                  src={recommendation.album_cover} 
-                  alt={recommendation.name} 
-                  width={64} // Define width
-                  height={64} // Define height
-                  className="object-cover rounded mr-2"
-              />
-              <div>
-                  <p className="text-sm">{`${recommendation.name} by ${recommendation.artist}`}</p>
-              </div>
-          </div>
-    
-    ))}
+      {typeof recommendations === undefined ? "Please Refresh Page For New Recommendation"
+       :<div className="flex justify-center gap-8">
+       {/* Determine the maximum length of the two arrays */}
+   
+       {/* Column for the recommendation array */}
+       <div className="w-1/2">
+
+           {Array.from({ length: minLength }).map((_, index) => {
+               const recommendation = recommendations[index];
+               return recommendation ? (
+                   <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
+                       <Image 
+                           src={recommendation.album_cover} 
+                           alt={recommendation.name} 
+                           width={64}
+                           height={64}
+                           className="object-cover rounded mr-2"
+                       />
+                       <div>
+                           <p className="text-sm">{`${recommendation.name} by ${recommendation.artist}`}</p>
+                       </div>
+                   </div>
+               ) : (
+                   <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
+                       {/* Empty placeholder */}
+                   </div>
+               );
+           })}
+       </div>
+   
+       {/* Column for the originalPlaylist */}
+       <div className="w-1/2">
+           {Array.from({ length: minLength }).map((_, index) => {
+               const item = originalPlaylist[index];
+               return item ? (
+                   <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center justify-between">
+                       <Image 
+                           src={item.image} 
+                           alt={item.name} 
+                           width={64}
+                           height={64}
+                           className="object-cover rounded mr-2"
+                       />
+                       <div className="text-right">
+                           <p className="text-sm font-bold">{item.artist}</p>
+                           <p className="text-xs">{item.name}</p>
+                       </div>
+                   </div>
+               ) : (
+                   <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
+                       {/* Empty placeholder */}
+                   </div>
+               );
+           })}
+       </div>
+   </div>
+   
+   }
   </div>
 </div>
 

@@ -1,10 +1,9 @@
-const { getSpotifyRecommendations,fetchArtistId, fetchSpotifyGeneratedPlaylists, fetchUserPlaylists,fetchAudioFeaturesForPlaylist } = require('../../utils/spotifyAPI');
+const {getArtistTracks,calculateAverageAudioFeatures, getSpotifyRecommendations,fetchArtistId, fetchSpotifyGeneratedPlaylists, fetchUserPlaylists,fetchAudioFeaturesForPlaylist } = require('../../utils/spotifyAPI');
 const { spawn } = require('child_process');
 
 const fs = require('fs');
 import { fetchJSONData } from '../../utils/fetchJSON';
-
-
+import { updateJsonInS3 } from '../../utils/updateJSON';
 
 
 // Helper function to calculate cosine similarity (you'll need to write this part)
@@ -94,38 +93,38 @@ function average(array) {
     return array.reduce((sum, val) => sum + val, 0) / array.length;
 }
 
+async function getOppositePlaylist(ids, centroid, data) {
+    const allIdsPresent = ids.every(id => data.hasOwnProperty(id));
+    if (!allIdsPresent) {
+        // If any ID is missing, update the JSON in S3
+        try {
+            await updateJsonInS3(ids);
+            console.log('JSON data successfully updated in S3');
+        } catch (error) {
+            console.error('Error updating JSON in S3:', error);
+            throw error;
+        }
+    }else{
+        const opposites = findOpposite(ids, data, 5);
+        const params = {
+            target_danceability: 1 - centroid.danceability,
+            target_energy: 1 - centroid.energy,
+            target_mode: centroid.mode === 0 ? 1 : 0,
+            // target_key: centroid.key, // Uncomment if needed
+            target_speechiness: 1 - centroid.speechiness,
+            target_acousticness: 1 - centroid.acousticness,
+            target_instrumentalness: 1 - centroid.instrumentalness,
+            target_liveness: 1 - centroid.liveness,
+            target_valence: 1 - centroid.valence,
+            limit: 20 // Assuming limit is a predefined variable
+        };
 
+        // Fetch Spotify recommendations
+        const playlistRecommendations = await getSpotifyRecommendations(opposites, params);
+        return playlistRecommendations;
+    }
 
-const path = require('path');
-
-// async function runPythonScript(artistIds) {
-//     return new Promise((resolve, reject) => {
-//         // Construct the path to the Python file
-//         const pythonFilePath = path.join(__dirname, '../../../../src/pages/api/find_opposite.py');
-
-//         const pythonProcess = spawn('python3', [pythonFilePath, JSON.stringify(artistIds)]);
-
-//         let scriptOutput = '';
-//         pythonProcess.stdout.on('data', (data) => {
-//             scriptOutput += data.toString();
-//         });
-
-//         pythonProcess.stderr.on('data', (data) => {
-//             console.error(`stderr: ${data}`);
-//         });
-
-//         pythonProcess.on('close', (code) => {
-//             console.log(`Python script output: ${scriptOutput}`);
-
-//             console.log(`Python script exited with code ${code}`);
-//             if (code === 0) {
-//                 resolve(JSON.parse(scriptOutput));
-//             } else {
-//                 reject(`Python script exited with code ${code}`);
-//             }
-//         });
-//     });
-// }
+}
 
 
 async function getArtistIds(closestTracks) {
@@ -159,44 +158,14 @@ async function getOppositePlaylistRecommendations(tracks, limit = 15) {
 
     // const csvFilePath = path.join(scriptDir, 'artist_avg_features.json');
 
+
+
     const jsonData = await fetchJSONData()
 
     // const jsonData = await response.json();
     const data = JSON.parse(jsonData);
 
-    const opposites = findOpposite(ids,data, 5);
-
-    // .then(result => {
-    //   // console.log('Result from Python script:', result);
-    //   // You can use 'result' here
-    //   return result
-    //   // console.log(oppositeIds)
-    // })
-    // .catch(error => {
-    //   console.error('Error running Python script:', error);
-    // });
-    const params = {
-      target_danceability: 1 - centroid.danceability,
-      target_energy: 1 - centroid.energy,
-      target_mode: centroid.mode === 0 ? 1 : 0,
-      // target_key: centroid.key,
-      target_speechiness: 1 - centroid.speechiness,
-      target_acousticness: 1 - centroid.acousticness,
-      target_instrumentalness: 1 - centroid.instrumentalness,
-      target_liveness: 1 - centroid.liveness,
-      target_valence: 1 - centroid.valence,
-      limit: 20 // Assuming limit is a predefined variable
-  };
-
-  // Example usage
-  // Make sure to pass oppositesSeeds, params, and a valid accessToken
-  return getSpotifyRecommendations(opposites,params)
-  .then(playlistRecommendations => {
-    return playlistRecommendations;
-  })
-  .catch(error => {
-    console.error('Error:', error);
-  });
+    return getOppositePlaylist(ids, centroid, data) 
 }
 
 export default async function handler(req, res) {
@@ -206,12 +175,21 @@ export default async function handler(req, res) {
         return;
     }
     
-    console.log(URI)
+    // console.log(URI)
 
     try {
-        const features = await fetchAudioFeaturesForPlaylist(URI);
-        const recommendations = await getOppositePlaylistRecommendations(features);
-        res.status(200).json(recommendations);
+        const payload = await fetchAudioFeaturesForPlaylist(URI);
+        const recommendations = await getOppositePlaylistRecommendations(payload[0]);
+        
+        const original = payload[1].items.map(item =>{
+            return {
+                artist: item.track.artists[0].name,
+                name: item.track.name,
+                image: item.track.album.images[1].url
+            };
+        })
+        console.log(typeof recommendations)
+        res.status(200).json([recommendations,original]);
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: error.message });
