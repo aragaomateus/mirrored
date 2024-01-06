@@ -342,7 +342,7 @@ async function getSpotifyUserInfo(username) {
       throw error; // Re-throw the error to handle it in the calling function
     }
   }
-  const searchSpotifyArtist = async (artistName) => {
+const searchSpotifyArtist = async (artistName) => {
     const accessToken = await refreshAccessToken();
 
     const query = encodeURIComponent(`artist:${artistName}`);
@@ -362,7 +362,7 @@ async function getSpotifyUserInfo(username) {
     }
   };
 
-  async function createSpotifyPlaylist(userId, playlistName) {
+async function createSpotifyPlaylist(userId, playlistName) {
     const accessToken = await refreshAccessToken();
 
     const endpoint = `https://api.spotify.com/v1/users/${userId}/playlists`;
@@ -391,7 +391,7 @@ async function getSpotifyUserInfo(username) {
     }
   }
 
-  async function addTracksToSpotifyPlaylist(playlistId, trackUris) {
+async function addTracksToSpotifyPlaylist(playlistId, trackUris) {
     const accessToken = await refreshAccessToken();
 
     const endpoint = `https://api.spotify.com/v1/playlists/${playlistId}/tracks`;
@@ -415,12 +415,65 @@ async function getSpotifyUserInfo(username) {
       throw error;
     }
   }
+async function getArtistTracks(artistId) {
+    const accessToken = await refreshAccessToken();
+
+    const response = await fetch(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`, {
+      method: 'GET',
+      headers :{
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      }
+    });
+  
+    const data = await response.json();
+    return data.tracks.map(track => track.id);
+  }
+  
+//   async function getTrackAudioFeatures(trackId) {
+//     const accessToken = await refreshAccessToken();
+
+//     const response = await fetch(`https://api.spotify.com/v1/audio-features/${trackId}`, {
+//       method: 'GET',
+//       headers: { 'Authorization': `Bearer ${accessToken}` }
+//     });
+  
+//     return await response.json();
+//   }
+  
+//   async function calculateAverageAudioFeatures(artistId) {
+//     // const accessToken = await refreshAccessToken();
+//     const trackIds = await getArtistTracks(artistId);
+  
+//     const features = await Promise.all(trackIds.map(trackId => getTrackAudioFeatures(trackId)));
+  
+//     // Initialize an object to store the sum of each feature
+//     const featureSums = features.reduce((sums, feature) => {
+//       for (const key in feature) {
+//         if (typeof feature[key] === 'number') {
+//           sums[key] = (sums[key] || 0) + feature[key];
+//         }
+//       }
+//       return sums;
+//     }, {});
+  
+//     // Calculate average
+//     const averages = {};
+//     const numTracks = features.length;
+//     for (const key in featureSums) {
+//       averages[key] = featureSums[key] / numTracks;
+//     }
+  
+//     return  { [artistId]: averages };
+//   }
   
   
 
 
 // Exporting the functions to be used in other files
 module.exports = {
+    // calculateAverageAudioFeatures,
+    getArtistTracks,
     createSpotifyPlaylist,
     addTracksToSpotifyPlaylist,
     searchSpotifyArtist,

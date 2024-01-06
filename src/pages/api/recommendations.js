@@ -1,4 +1,4 @@
-const { getSpotifyRecommendations,fetchArtistId, fetchSpotifyGeneratedPlaylists, fetchUserPlaylists,fetchAudioFeaturesForPlaylist } = require('../../utils/spotifyAPI');
+const { getSpotifyRecommendations, calculateAverageAudioFeatures, fetchArtistId, fetchSpotifyGeneratedPlaylists, fetchUserPlaylists,fetchAudioFeaturesForPlaylist } = require('../../utils/spotifyAPI');
 const { spawn } = require('child_process');
 
 const fs = require('fs');
@@ -98,36 +98,6 @@ function average(array) {
 
 const path = require('path');
 
-// async function runPythonScript(artistIds) {
-//     return new Promise((resolve, reject) => {
-//         // Construct the path to the Python file
-//         const pythonFilePath = path.join(__dirname, '../../../../src/pages/api/find_opposite.py');
-
-//         const pythonProcess = spawn('python3', [pythonFilePath, JSON.stringify(artistIds)]);
-
-//         let scriptOutput = '';
-//         pythonProcess.stdout.on('data', (data) => {
-//             scriptOutput += data.toString();
-//         });
-
-//         pythonProcess.stderr.on('data', (data) => {
-//             console.error(`stderr: ${data}`);
-//         });
-
-//         pythonProcess.on('close', (code) => {
-//             console.log(`Python script output: ${scriptOutput}`);
-
-//             console.log(`Python script exited with code ${code}`);
-//             if (code === 0) {
-//                 resolve(JSON.parse(scriptOutput));
-//             } else {
-//                 reject(`Python script exited with code ${code}`);
-//             }
-//         });
-//     });
-// }
-
-
 async function getArtistIds(closestTracks) {
     const artistIdPromises = closestTracks.map(track => 
         fetchArtistId(track.id))
@@ -164,17 +134,15 @@ async function getOppositePlaylistRecommendations(tracks, limit = 15) {
     // const jsonData = await response.json();
     const data = JSON.parse(jsonData);
 
+    // ids.forEach(id =>{
+    //     if (!data.hasOwnProperty(id)){
+    //         const new_features=  calculateAverageAudioFeatures(id).then(result => {return result})
+    //         console.log('not in data set:',new_features)
+    //     }
+    // })
+
     const opposites = findOpposite(ids,data, 5);
 
-    // .then(result => {
-    //   // console.log('Result from Python script:', result);
-    //   // You can use 'result' here
-    //   return result
-    //   // console.log(oppositeIds)
-    // })
-    // .catch(error => {
-    //   console.error('Error running Python script:', error);
-    // });
     const params = {
       target_danceability: 1 - centroid.danceability,
       target_energy: 1 - centroid.energy,
