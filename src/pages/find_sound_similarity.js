@@ -31,18 +31,6 @@ const ProgressBar = ({ similarity, loading }) => {
   );
 };
 
-const adjustSimilarity=(similarity)=>{
-  console.log(similarity)
-  if ((similarity - 70) > 0 ){
-    console.log((similarity - 70)/30)
-    return ((similarity - 70)/30) *100
-
-  } else if ((similarity - 80) < 0){
-
-    return similarity
-  }
-}
-
 
 
 
@@ -174,7 +162,7 @@ export default function FindSoundSimilarity() {
 
         {/* Display loading messages */}
         {loading && <p className="text-spotify-green">{loadingMessage}</p>}
-        {!loading && <ProgressBar similarity={adjustSimilarity(similarity)} loading={loading} />}
+        {!loading && <ProgressBar similarity={similarity} loading={loading} />}
 
       </main>
     </div>

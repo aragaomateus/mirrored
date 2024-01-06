@@ -1,5 +1,5 @@
-const { getArtistTracks, calculateAverageAudioFeatures, fetchUserPlaylists } = require('./spotifyAPI');
+const { fetchSpotifyData, fetchSpotifyGeneratedPlaylists, fetchUserPlaylists } = require('./spotifyAPI');
 
-getArtistTracks('1TnNKsMdzxwBiHkde10tPX').then(playlists => {
+fetchUserPlaylists('aragaosm').then(playlists => {
     console.log(playlists);
 });
