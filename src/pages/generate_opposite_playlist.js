@@ -61,7 +61,10 @@ export default function GenerateOppositePlaylist() {
       setLoading(false);
     }
   };
-  const minLength = Math.min(recommendations.length, originalPlaylist.length)
+
+  const minLength = (Array.isArray(recommendations) && Array.isArray(originalPlaylist)) 
+  ? Math.min(recommendations.length, originalPlaylist.length) 
+  : 0;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
@@ -72,7 +75,15 @@ export default function GenerateOppositePlaylist() {
       Back to Main Menu
     </button>
       <main className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-4"> Songs We Know You Will Hate</h1>
+      <div className="tooltip">
+        <h1 className="text-3xl font-bold mb-4 inline-block">Songs We Know You Will Hate</h1>
+        <div className="question-mark-circle">&#63;</div> {/* Unicode for question mark */}
+        <span className="tooltiptext">Let's generate an opposite playlist full of song you havent heard before.
+        Add you username, pick your playlist and the see the magic happen. </span>
+      </div>
+
+
+
 
         <form onSubmit={handleSubmit} className="mb-8">
           <label htmlFor="username" className="block mb-2 text-sm font-bold">
@@ -126,7 +137,7 @@ export default function GenerateOppositePlaylist() {
             className="px-4 py-2 bg-spotify-green rounded hover:bg-spotify-green-darker"
             disabled={loading}
           >
-            {loading ? "Loading..." : "Fetch Playlists"}
+            {loading ? "Loading..." : "Get Your Playlists"}
           </button>
         </form>
 
@@ -136,12 +147,13 @@ export default function GenerateOppositePlaylist() {
         <p>Loading playlists...</p>
       ) : (
         playlists.length > 0 && (
-          <div className="bg-spotify-green p-4 rounded-lg">
+          
+          <div className="bg-spotify-green p-4 rounded-lg">         
             <div className="playlists grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {playlists.map((playlist, index) => (
                 <button
                   key={index}
-                  className="playlist bg-black hover:bg-opacity-80 text-white py-1 px-2 text-sm rounded shadow"
+                  className="playlist bg-black hover:bg-opacity-50 text-white py-1 px-2 text-sm rounded shadow"
                   onClick={() => handlePlaylistSelection(playlist.uri)} // Define this function to handle click
                 >
                   {playlist.name}
@@ -153,10 +165,14 @@ export default function GenerateOppositePlaylist() {
       )}
 
 <div className=" flex-center placeholder-generated-playlist bg-spotify-black text-spotify-white p-4 rounded-lg">
-  <h2 className=" flex-center text-xl font-bold mb-4">Generated Opposite Playlist VS Your Original Playlist</h2>
+  {Array.isArray(recommendations) && minLength>0  ? 
+  <h2 className="w-full text-center text-xl font-bold mb-4">Generated Opposite Playlist VS Your Original Playlist</h2>
+  : " "
+}
   <div className="playlist-list">
-      {typeof recommendations === undefined ? "Please Refresh Page For New Recommendation"
-       :<div className="flex justify-center gap-8">
+      { !Array.isArray(recommendations) ?  <h3 className="text-red-500 font-bold">Please Select the Playlist Again</h3>
+       :
+       <div className="flex justify-center gap-8">
        {/* Determine the maximum length of the two arrays */}
    
        {/* Column for the recommendation array */}
@@ -215,8 +231,6 @@ export default function GenerateOppositePlaylist() {
    }
   </div>
 </div>
-
-
       </main>
     </div>
   );
