@@ -10,7 +10,7 @@ export default function GenerateOppositePlaylist() {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [originalPlaylist,setOriginalPlaylist] = useState([]);
+  const [originalPlaylist, setOriginalPlaylist] = useState([]);
   const router = useRouter();
   const navigateToMainMenu = () => {
     router.push('/'); // Assuming '/' is your main menu route
@@ -42,7 +42,7 @@ export default function GenerateOppositePlaylist() {
     }
   };
 
-  const handlePlaylistSelection = async (event) =>{
+  const handlePlaylistSelection = async (event) => {
     setLoading(true);
     setError('');
 
@@ -62,25 +62,25 @@ export default function GenerateOppositePlaylist() {
     }
   };
 
-  const minLength = (Array.isArray(recommendations) && Array.isArray(originalPlaylist)) 
-  ? Math.min(recommendations.length, originalPlaylist.length) 
-  : 0;
+  const minLength = (Array.isArray(recommendations) && Array.isArray(originalPlaylist))
+    ? Math.min(recommendations.length, originalPlaylist.length)
+    : 0;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
-       <button
-      onClick={navigateToMainMenu}
-      className="fixed top-0 left-0 mt-4 ml-4 px-4 py-2 bg-spotify-green rounded hover:bg-spotify-green-darker text-sm z-10" // Adjusted classes for fixed positioning and size
-    >
-      Back to Main Menu
-    </button>
+      <button
+        onClick={navigateToMainMenu}
+        className="fixed top-0 left-0 mt-4 ml-4 px-4 py-2 bg-spotify-green rounded hover:bg-spotify-green-darker text-sm z-10" // Adjusted classes for fixed positioning and size
+      >
+        Back to Main Menu
+      </button>
       <main className="container mx-auto p-4">
-      <div className="tooltip">
-        <h1 className="text-3xl font-bold mb-4 inline-block">Songs We Know You Will Hate</h1>
-        <div className="question-mark-circle">&#63;</div> {/* Unicode for question mark */}
-        <span className="tooltiptext">Let's generate an opposite playlist full of song you havent heard before.
-        Add you username, pick your playlist and the see the magic happen. </span>
-      </div>
+        <div className="tooltip">
+          <h1 className="text-3xl font-bold mb-4 inline-block">Songs We Know You Will Hate</h1>
+          <div className="question-mark-circle">&#63;</div> {/* Unicode for question mark */}
+          <span className="tooltiptext">Let's generate an opposite playlist full of song you havent heard before.
+            Add you username, pick your playlist and the see the magic happen. </span>
+        </div>
 
 
 
@@ -144,93 +144,93 @@ export default function GenerateOppositePlaylist() {
         {error && <p className="text-red-500">{error}</p>}
 
         {loading ? (
-        <p>Loading playlists...</p>
-      ) : (
-        playlists.length > 0 && (
-          
-          <div className="bg-spotify-green p-4 rounded-lg">         
-            <div className="playlists grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {playlists.map((playlist, index) => (
-                <button
-                  key={index}
-                  className="playlist bg-black hover:bg-opacity-50 text-white py-1 px-2 text-sm rounded shadow"
-                  onClick={() => handlePlaylistSelection(playlist.uri)} // Define this function to handle click
-                >
-                  {playlist.name}
-                </button>
-              ))}
+          <p>Loading playlists...</p>
+        ) : (
+          playlists.length > 0 && (
+
+            <div className="bg-spotify-green p-4 rounded-lg">
+              <div className="playlists grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {playlists.map((playlist, index) => (
+                  <button
+                    key={index}
+                    className="playlist bg-black hover:bg-opacity-50 text-white py-1 px-2 text-sm rounded shadow"
+                    onClick={() => handlePlaylistSelection(playlist.uri)} // Define this function to handle click
+                  >
+                    {playlist.name}
+                  </button>
+                ))}
+              </div>
             </div>
+          )
+        )}
+
+        <div className=" flex-center placeholder-generated-playlist bg-spotify-black text-spotify-white p-4 rounded-lg">
+          {Array.isArray(recommendations) && minLength > 0 ?
+            <h2 className="w-full text-center text-xl font-bold mb-4">Generated Opposite Playlist VS Your Original Playlist</h2>
+            : " "
+          }
+          <div className="playlist-list">
+            {!Array.isArray(recommendations) ? <h3 className="text-red-500 font-bold">Please Select the Playlist Again</h3>
+              :
+              <div className="flex justify-center gap-8">
+                {/* Determine the maximum length of the two arrays */}
+
+                {/* Column for the recommendation array */}
+                <div className="w-1/2">
+
+                  {Array.from({ length: minLength }).map((_, index) => {
+                    const recommendation = recommendations[index];
+                    return recommendation ? (
+                      <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
+                        <Image
+                          src={recommendation.album_cover}
+                          alt={recommendation.name}
+                          width={64}
+                          height={64}
+                          className="object-cover rounded mr-2"
+                        />
+                        <div>
+                          <p className="text-sm">{`${recommendation.name} by ${recommendation.artist}`}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
+                        {/* Empty placeholder */}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Column for the originalPlaylist */}
+                <div className="w-1/2">
+                  {Array.from({ length: minLength }).map((_, index) => {
+                    const item = originalPlaylist[index];
+                    return item ? (
+                      <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center justify-between">
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          width={64}
+                          height={64}
+                          className="object-cover rounded mr-2"
+                        />
+                        <div className="text-right">
+                          <p className="text-sm font-bold">{item.artist}</p>
+                          <p className="text-xs">{item.name}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
+                        {/* Empty placeholder */}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+            }
           </div>
-        )
-      )}
-
-<div className=" flex-center placeholder-generated-playlist bg-spotify-black text-spotify-white p-4 rounded-lg">
-  {Array.isArray(recommendations) && minLength>0  ? 
-  <h2 className="w-full text-center text-xl font-bold mb-4">Generated Opposite Playlist VS Your Original Playlist</h2>
-  : " "
-}
-  <div className="playlist-list">
-      { !Array.isArray(recommendations) ?  <h3 className="text-red-500 font-bold">Please Select the Playlist Again</h3>
-       :
-       <div className="flex justify-center gap-8">
-       {/* Determine the maximum length of the two arrays */}
-   
-       {/* Column for the recommendation array */}
-       <div className="w-1/2">
-
-           {Array.from({ length: minLength }).map((_, index) => {
-               const recommendation = recommendations[index];
-               return recommendation ? (
-                   <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
-                       <Image 
-                           src={recommendation.album_cover} 
-                           alt={recommendation.name} 
-                           width={64}
-                           height={64}
-                           className="object-cover rounded mr-2"
-                       />
-                       <div>
-                           <p className="text-sm">{`${recommendation.name} by ${recommendation.artist}`}</p>
-                       </div>
-                   </div>
-               ) : (
-                   <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
-                       {/* Empty placeholder */}
-                   </div>
-               );
-           })}
-       </div>
-   
-       {/* Column for the originalPlaylist */}
-       <div className="w-1/2">
-           {Array.from({ length: minLength }).map((_, index) => {
-               const item = originalPlaylist[index];
-               return item ? (
-                   <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center justify-between">
-                       <Image 
-                           src={item.image} 
-                           alt={item.name} 
-                           width={64}
-                           height={64}
-                           className="object-cover rounded mr-2"
-                       />
-                       <div className="text-right">
-                           <p className="text-sm font-bold">{item.artist}</p>
-                           <p className="text-xs">{item.name}</p>
-                       </div>
-                   </div>
-               ) : (
-                   <div key={index} className="playlist-item bg-spotify-green p-2 rounded shadow-lg mb-2 flex items-center">
-                       {/* Empty placeholder */}
-                   </div>
-               );
-           })}
-       </div>
-   </div>
-   
-   }
-  </div>
-</div>
+        </div>
       </main>
     </div>
   );

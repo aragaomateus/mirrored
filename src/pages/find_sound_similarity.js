@@ -31,6 +31,12 @@ const ProgressBar = ({ similarity, loading }) => {
   );
 };
 
+const adjustedSimilarity = (similarity)=>{
+  const adjust = similarity - 70
+  if (adjust>0){
+    return (adjust / 30) *100
+  }else{return similarity}
+}
 
 
 
@@ -60,6 +66,7 @@ const useLoadingMessages = (loading) => {
 
 export default function FindSoundSimilarity() {
   const router = useRouter();
+  const [payload,setPayload] = useState({});
   const navigateToMainMenu = () => {
     router.push('/'); // Assuming '/' is your main menu route
   };
@@ -97,6 +104,9 @@ export default function FindSoundSimilarity() {
       if (result.success) {
         // Handle the successful response here
         setSimilarity(result.similarity*100)
+        setPayload(result.users)
+        console.log(result.users)
+
       } else {
         throw new Error(result.error);
       }
@@ -106,8 +116,12 @@ export default function FindSoundSimilarity() {
       setLoading(false);
     }
   };
-  
+  const getRandomGenres = (genres) => {
+    const shuffled = [...genres].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 7);
+};
 
+  
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
@@ -162,8 +176,32 @@ export default function FindSoundSimilarity() {
 
         {/* Display loading messages */}
         {loading && <p className="text-spotify-green">{loadingMessage}</p>}
-        {!loading && <ProgressBar similarity={similarity} loading={loading} />}
-
+        {!loading && <ProgressBar similarity={adjustedSimilarity(similarity)} loading={loading} />}
+        <div className="container mx-auto p-4">
+            {!loading && similarity > 0 && (
+                <>
+                    <p className="text-white font-bold">{`${payload.userA.info.display_name} and ${payload.userB.info.display_name} Similarity Score!`}</p>
+                    <div className="flex justify-between">
+                        <div className="w-1/2">
+                            <h3 className="text-white font-bold mt-4">{`${payload.userA.info.display_name} listens to these genres:`}</h3>
+                            <ul>
+                                { getRandomGenres(payload.userA.genres).map((genre, index) => (
+                                    <li key={index} className="text-white">{genre}</li>
+                                ))}
+                            </ul>
+                        </div>
+                        <div className="w-1/2">
+                            <h3 className="text-white font-bold mt-4">{`${payload.userB.info.display_name} listens to these genres:`}</h3>
+                            <ul>
+                                { getRandomGenres(payload.userB.genres).map((genre, index) => (
+                                    <li key={index} className="text-white">{genre}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
       </main>
     </div>
 

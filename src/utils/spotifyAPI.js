@@ -172,7 +172,6 @@ async function getAudioFeaturesForTracks(trackIds) {
 
 async function fetchAudioFeaturesForPlaylist(playlistURI, numberOfTracks = null) {
     const accessToken = await refreshAccessToken();
-    console.log(playlistURI);
     const playlistId = playlistURI.split(':')[2];
 
     const limit = numberOfTracks || 50;  // If numberOfTracks is provided, use it, otherwise default to 50
@@ -186,7 +185,6 @@ async function fetchAudioFeaturesForPlaylist(playlistURI, numberOfTracks = null)
             }
         });
         const playlistsData = await response.json();
-
         if (!playlistsData || !playlistsData.items) {
             console.log(`Couldn't fetch tracks for playlist ID: ${playlistId}. Skipping.`);
             return [];
@@ -472,10 +470,38 @@ async function calculateAverageAudioFeatures(artistId) {
     return  { [artistId]: averages };
   }
 
+  async function getMultipleArtistsInfo(artistIds) {
+    const accessToken = await refreshAccessToken();
+
+    const url = `https://api.spotify.com/v1/artists?ids=${artistIds.join(',')}`;
+    const headers = {
+        'Authorization': `Bearer ${accessToken}`
+    };
+
+    try {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        // Use flatMap to flatten the array of arrays into a single array
+        // and then create a Set from it to eliminate duplicates
+        const genres = new Set(data.artists.flatMap(artist => artist.genres));
+
+        // Convert the Set back to an array if needed
+        return Array.from(genres);
+    } catch (error) {
+        console.error('Error fetching artists info:', error);
+        return [];
+    }
+}
+
 
 
 // Exporting the functions to be used in other files
 module.exports = {
+    getMultipleArtistsInfo,
     calculateAverageAudioFeatures,
     getArtistTracks,
     createSpotifyPlaylist,
