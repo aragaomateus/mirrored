@@ -29,51 +29,83 @@ const cosineSimilarity = (vecA, vecB) => {
   };
   
 
-const findOpposite = (artistIds, data, n = 5) => {
-let allOpposites = [];
-
-artistIds.forEach(artistId => {
-    if (!artistId || artistId.length <= 'undefined'.length || !data[artistId]) {
-    console.log(`Invalid or missing data for artistId: '${artistId}'`);
-    return;
+  const findMinMax = (data) => {
+    let minMax = {};
+    for (const features of Object.values(data)) {
+        Object.entries(features).forEach(([key, value]) => {
+            if (!minMax[key]) {
+                minMax[key] = { min: Infinity, max: -Infinity };
+            }
+            minMax[key].min = Math.min(minMax[key].min, value);
+            minMax[key].max = Math.max(minMax[key].max, value);
+        });
     }
-
-    const artistFeatures = Object.values(data[artistId]);
-    let distances = [];
-
-    for (const [id, features] of Object.entries(data)) {
-    if (id !== artistId && id.length > 'undefined'.length) {
-        const featureValues = Object.values(features);
-        const distance = cosineSimilarity(artistFeatures, featureValues);
-        distances.push({ id, distance });
-    }
-    }
-
-    distances.sort((a, b) => a.distance - b.distance);
-    allOpposites.push(...distances.slice(0, n).map(item => item.id));
-});
-
-// Filter for unique artist IDs
-return [...new Set(allOpposites)];
+    return minMax;
 };
-  
-const findOppositeArtists = (file, artistIds, n) => {
-return new Promise((resolve, reject) => {
-    // fs.readFile(filePath, 'utf8', (err, jsonString) => {
-    // if (err) {
-    //     reject("Error reading file: " + err);
-    // } else {
-        try {
-        const data = JSON.parse(file);
-        const opposites = findOpposite(artistIds, data, n);
-        resolve(opposites);
-        } catch (error) {
-        reject('Error parsing JSON: ' + error);
+
+const normalizeFeatures = (features, minMax) => {
+    return Object.fromEntries(Object.entries(features).map(([key, value]) => {
+        if (minMax[key].max !== minMax[key].min) {
+            return [key, (value - minMax[key].min) / (minMax[key].max - minMax[key].min)];
         }
-    // }
-    // });
-});
+        return [key, 0]; // Avoid division by zero
+    }));
 };
+
+const findOpposite = (artistIds, data, n = 5) => {
+    let allOpposites = [];
+    const minMax = findMinMax(data);
+
+    artistIds.forEach(artistId => {
+        if (!artistId || !data[artistId]) {
+            console.log(`Invalid or missing data for artistId: '${artistId}'`);
+            return;
+        }
+
+        const artistFeatures = normalizeFeatures(data[artistId], minMax);
+        let distances = [];
+
+        for (const [id, features] of Object.entries(data)) {
+            if (id !== artistId) {
+                const normalizedFeatures = normalizeFeatures(features, minMax);
+                const distance = cosineSimilarity(Object.values(artistFeatures), Object.values(normalizedFeatures));
+                distances.push({ id, distance });
+            }
+        }
+
+        distances.sort((a, b) => a.distance - b.distance);
+        allOpposites.push(...distances.slice(0, n).map(item => item.id));
+    });
+
+    return allOpposites;
+};
+
+
+// const findOppositeArtists = (file, artistIds, n) => {
+// return new Promise((resolve, reject) => {
+//     // fs.readFile(filePath, 'utf8', (err, jsonString) => {
+//     // if (err) {
+//     //     reject("Error reading file: " + err);
+//     // } else {
+//         try {
+//         const data = JSON.parse(file);
+//         const opposites = findOpposite(artistIds, data, n);
+//         resolve(opposites);
+//         } catch (error) {
+//         reject('Error parsing JSON: ' + error);
+//         }
+//     // }
+//     // });
+// });
+// };
+function cleanArray(arr) {
+    // Create a new Set from the filtered array (removing 'undefined' and duplicates)
+    const cleanedSet = new Set(arr.filter(id => id !== 'undefined' && id !== undefined));
+
+    // Convert the Set back to an array
+    return Array.from(cleanedSet);
+}
+
   
 function calculateCentroid(tracks, features) {
     const centroid = {};
@@ -105,7 +137,8 @@ async function getOppositePlaylist(ids, centroid, data) {
             throw error;
         }
     }else{
-        const opposites = findOpposite(ids, data, 5);
+        const opposites =cleanArray(findOpposite(ids, data, 5));
+        console.log('opposites',opposites)
         const params = {
             target_danceability: 1 - centroid.danceability,
             target_energy: 1 - centroid.energy,
@@ -151,13 +184,6 @@ async function getOppositePlaylistRecommendations(tracks, limit = 15) {
     const packedArtistIds = await getArtistIds(closestTracks)
 
     const ids = packedArtistIds.map(artist => artist[0].id)
-    
-    // // var oppositeIds = []
-    // const path = require('path');
-    // const scriptDir = __dirname; // Directory where the current script is located
-
-    // const csvFilePath = path.join(scriptDir, 'artist_avg_features.json');
-
 
 
     const jsonData = await fetchJSONData()
