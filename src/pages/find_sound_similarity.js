@@ -128,12 +128,12 @@ export default function FindSoundSimilarity() {
     {/* Fixed positioned "Back to Main Menu" button */}
     <button
       onClick={navigateToMainMenu}
-      className="fixed top-0 left-0 mt-4 ml-4 px-4 py-2 bg-spotify-green rounded hover:bg-spotify-green-darker text-sm z-10" // Adjusted classes for fixed positioning and size
+      className="fixed top-0 custom-rounded-btn font-bold left-0 mt-4 ml-4 px-4 py-2 bg-spotify-green rounded hover:bg-spotify-green-darker text-sm z-10" // Adjusted classes for fixed positioning and size
     >
-      Back to Main Menu
+      Back
     </button>
       <main className="container mx-auto p-4 text-center">
-        <h1 className="text-3xl font-bold mb-4">Found the Sound Similarity</h1>
+        <h1 className="text-3xl font-bold mb-4">Spotify Compatibility Test</h1>
 
         <form onSubmit={handleSubmit} className="mb-8">
           <div className="flex justify-around mb-4">
@@ -160,14 +160,14 @@ export default function FindSoundSimilarity() {
           </div>
           <button
             type="submit"
-            className="px-4 py-2 bg-spotify-green rounded hover:bg-spotify-green-darker mx-auto block"
+            className="px-4 font-bold custom-rounded-btn py-2 bg-spotify-green rounded hover:bg-spotify-green-darker mx-auto block"
             disabled={loading}
           >
             {loading ? (
               // Replace this div with your loading animation component
               <div className="loader"></div>
             ) : (
-              "Find Similarity"
+              "Find Compatibility"
             )}
           </button>
         </form>

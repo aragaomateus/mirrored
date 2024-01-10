@@ -26,6 +26,11 @@
   transform: rotate(10deg);
 }
 
+.custom-rounded-btn {
+  border-radius: 30px; /* or any other value you prefer */
+}
+
+
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
@@ -58,42 +63,102 @@ body {
 }
 .tooltip {
   position: relative;
-  display: inline-block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
 }
 
 .tooltip .question-mark-circle {
-  display: inline-flex;
+  display: flex;
   justify-content: center;
   align-items: center;
-  margin-left: 5px;
+  margin-bottom: 5px; /* Spacing between the symbol and the tooltip */
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background-color: #ccc; /* Light gray background */
-  color: black;
+  background-color: var(--spotify-white);
+  color: var(--spotify-black);
   cursor: pointer;
   font-weight: bold;
 }
 
 .tooltip .tooltiptext {
   visibility: hidden;
-  width: 160px;
-  background-color: black;
-  color: #fff;
+  min-width: 280px; /* Adjust width as needed */
+  background-color: var(--spotify-black);
+  color: var(--spotify-white);
   text-align: center;
   border-radius: 6px;
-  font-size: 5;
-  padding: 5px 0;
+  padding: 8px;
   position: absolute;
   z-index: 1;
-  top: 50%;
-  left: calc(100% + 5px); /* Position to the right */
-  transform: translateY(-50%);
+  bottom: -35px; /* Adjust bottom as needed */
+  left: 50%;
+  transform: translateX(-50%);
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity 0.3s ease-in-out;
+  pointer-events: none;
 }
 
-.tooltip .question-mark-circle:hover + .tooltiptext {
+.tooltip:hover .tooltiptext {
   visibility: visible;
   opacity: 1;
+}
+
+/* Tooltip adjustments for smaller screens */
+@media (max-width: 480px) {
+  .tooltip .tooltiptext {
+    min-width: 90%;
+    bottom: -40px; /* Increase bottom value if tooltip is too close to the symbol */
+  }
+}
+
+
+/* Adjust the tooltip for small screens */
+@media (max-width: 480px) {
+  .tooltip .tooltiptext {
+    width: 90%; /* Full width on small screens */
+    left: 5%; /* Align to the left with a small margin */
+    transform: translate(0, -5px); /* Remove horizontal translation */
+  }
+}
+
+
+.playlist-item {
+  padding: 1rem; /* Adjust padding as necessary */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden; /* Prevents text from overflowing */
+}
+
+.playlist-item div {
+  flex: 1; /* Allows div to grow and shrink as needed */
+  min-width: 0; /* Allows text to truncate */
+}
+
+.playlist-item .text-right {
+  text-align: left; /* Align text to the left for better spacing */
+  padding-left: 0.5rem; /* Space between image and text */
+  white-space: nowrap; /* Prevent text from wrapping to new line */
+  overflow: hidden; /* Hide text that overflows */
+  text-overflow: ellipsis; /* Show ellipsis for overflowed text */
+}
+
+/* Responsive font sizes */
+.text-sm { /* Small text */
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem; /* 20px */
+}
+
+@media (max-width: 640px) { /* Tailwind's 'sm' breakpoint */
+  .text-sm {
+    font-size: 0.75rem; /* 12px for mobile */
+    line-height: 1rem; /* 16px for mobile */
+  }
+  .text-xs {
+    font-size: 0.65rem; /* Smaller text for mobile */
+    line-height: 0.75rem; /* Tighter line-height for mobile */
+  }
 }

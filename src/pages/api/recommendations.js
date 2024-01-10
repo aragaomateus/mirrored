@@ -80,24 +80,6 @@ const findOpposite = (artistIds, data, n = 5) => {
     return allOpposites;
 };
 
-
-// const findOppositeArtists = (file, artistIds, n) => {
-// return new Promise((resolve, reject) => {
-//     // fs.readFile(filePath, 'utf8', (err, jsonString) => {
-//     // if (err) {
-//     //     reject("Error reading file: " + err);
-//     // } else {
-//         try {
-//         const data = JSON.parse(file);
-//         const opposites = findOpposite(artistIds, data, n);
-//         resolve(opposites);
-//         } catch (error) {
-//         reject('Error parsing JSON: ' + error);
-//         }
-//     // }
-//     // });
-// });
-// };
 function cleanArray(arr) {
     // Create a new Set from the filtered array (removing 'undefined' and duplicates)
     const cleanedSet = new Set(arr.filter(id => id !== 'undefined' && id !== undefined));
@@ -125,13 +107,19 @@ function average(array) {
     return array.reduce((sum, val) => sum + val, 0) / array.length;
 }
 
-async function getOppositePlaylist(ids, centroid, data) {
+async function getOppositePlaylist(ids, centroid) {
+    const jsonData = await fetchJSONData()
+
+    // const jsonData = await response.json();
+    const data = JSON.parse(jsonData);
+
     const allIdsPresent = ids.every(id => data.hasOwnProperty(id));
     if (!allIdsPresent) {
         // If any ID is missing, update the JSON in S3
         try {
             await updateJsonInS3(ids);
             console.log('JSON data successfully updated in S3');
+            return await getOppositePlaylist(ids, centroid, data)
         } catch (error) {
             console.error('Error updating JSON in S3:', error);
             throw error;
@@ -186,12 +174,12 @@ async function getOppositePlaylistRecommendations(tracks, limit = 15) {
     const ids = packedArtistIds.map(artist => artist[0].id)
 
 
-    const jsonData = await fetchJSONData()
+    // const jsonData = await fetchJSONData()
 
-    // const jsonData = await response.json();
-    const data = JSON.parse(jsonData);
+    // // const jsonData = await response.json();
+    // const data = JSON.parse(jsonData);
 
-    return getOppositePlaylist(ids, centroid, data) 
+    return await getOppositePlaylist(ids, centroid) 
 }
 
 export default async function handler(req, res) {

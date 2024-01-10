@@ -146,9 +146,9 @@ const handleSubmit = async (event) => {
         {/* Back to Main Menu button */}
         <button
           onClick={navigateToMainMenu}
-          className="mb-4 px-4 py-2 bg-spotify-green text-xs rounded hover:bg-spotify-green-darker self-start"
+          className="mb-4 px-4 py-2 custom-rounded-btn font-bold bg-spotify-green text-xs rounded hover:bg-spotify-green-darker self-start"
         >
-          Back to Main Menu
+          Back
         </button>
 
         {/* Main content */}
@@ -165,7 +165,7 @@ const handleSubmit = async (event) => {
           />
           <button
             type="submit"
-            className="w-1/2 p-2 bg-spotify-green text-md rounded hover:bg-spotify-green-darker mx-auto"
+            className="w-1/2 p-2 font-bold custom-rounded-btn bg-spotify-green text-md rounded hover:bg-spotify-green-darker mx-auto"
             disabled={loading}
           >
             {loading ? "Loading..." : "Submit"}
