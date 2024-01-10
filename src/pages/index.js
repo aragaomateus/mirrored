@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-spotify-black text-spotify-white">
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
-      <h2 className="text-6xl md:text-5xl lg:text-6xl font-bold mb-6 text-center sm:px-4">SoundCompass</h2>
+      <h2 className="text-6xl md:text-5xl lg:text-6xl font-bold mb-6 text-center sm:px-4">Sound Compass</h2>
 
         {/* Circular buttons container */}
         <div className="relative w-96 h-96 -white rounded-full flex items-center justify-center mt-6">
