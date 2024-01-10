@@ -1,6 +1,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@media (max-width: 640px) {
+  h1 {
+    font-size: 3.5rem; /* Adjust the font size as needed for small devices */
+  }
+}
+
+@media (min-width: 640px) {
+  h1 {
+    font-size: 4rem; /* Adjust the font size as needed for medium devices */
+  }
+}
+
+@media (min-width: 1024px) {
+  h1 {
+    font-size: 6rem; /* This is the original 6xl size for large devices */
+  }
+}
+
 
 :root {
   --spotify-green: #1DB954;
