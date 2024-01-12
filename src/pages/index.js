@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import  {useLanguage}  from './LanguageContext';
-import  LanguageToggle  from './LanguageToggle';
+import  {useLanguage}  from '../utils/LanguageContext';
+import  LanguageToggle  from '../utils/LanguageToggle';
 import Link from 'next/link';
 // import translations from './translations'; // 
 

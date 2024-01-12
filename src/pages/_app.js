@@ -1,5 +1,5 @@
 import '@/styles/globals.css'
-import { LanguageProvider } from './LanguageContext';
+import { LanguageProvider } from '../utils/LanguageContext';
 
 export default function App({ Component, pageProps }) {
   return (
