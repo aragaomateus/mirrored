@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useLanguage } from './LanguageContext';
-import { LanguageToggle } from './LanguageToggle';
+import  {useLanguage}  from './LanguageContext';
+import  LanguageToggle  from './LanguageToggle';
 import Link from 'next/link';
 // import translations from './translations'; // 
 
@@ -11,7 +11,7 @@ const translations = {
     title: "Sound Compass",
     tastebreakers:  "Spotify Tastebreakers Playlists",
     compatibility:  "Spotify Compatibility Test",
-    customPlaylist: "Build Custom Playlist",
+    customPlaylist: "Playlist Finesser",
     toggleLanguage: "Português"
   },
   pt: {

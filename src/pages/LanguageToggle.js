@@ -1,7 +1,7 @@
 // LanguageToggle.js
 import { useLanguage } from './LanguageContext';
 
-export const LanguageToggle = () => {
+export default function LanguageToggle(){
     const { language, setLanguage } = useLanguage();
   
     const toggleLanguage = () => {
