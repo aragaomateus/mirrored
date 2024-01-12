@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState,useEffect } from 'react';
 import Image from 'next/image'; // Import Next.js Image component
 import { useRouter } from 'next/router';
 
+
 export default function GenerateOppositePlaylist() {
+
+  // All the State Variables
   const [username, setUsername] = useState('');
   const [playlistType, setPlaylistType] = useState('user');
   const [playlists, setPlaylists] = useState([]);
@@ -12,7 +14,96 @@ export default function GenerateOppositePlaylist() {
   const [error, setError] = useState('');
   const [originalPlaylist, setOriginalPlaylist] = useState([]);
   const router = useRouter();
+  const [userData, setUserData] = useState([]);
+  const [sessionStart, setSessionStart] = useState(null);
+  const [sessionEnd, setSessionEnd] = useState(null);
+  const [overallRating, setOverallRating] = useState(null);
+  const [currentPlaylist,setCurrentPlaylist] = useState('');
+
+  function generateSessionId() {
+    return window.crypto.randomUUID();
+  }
+  // Function to log user data
+  const logUserAction = (data) => {
+    setUserData(prevData => [
+      ...prevData,
+      {
+        data
+      }
+    ]);
+  };
+
+  const handleRatingChange = (event) => {
+    setOverallRating(event.target.value);
+  };
+
+  // Function to handle the rating submission
+  const handleRatingSubmission = () => {
+    if (overallRating != null) {
+      logUserAction({
+        action:'rate_overall_recommendations', 
+        username:username,
+        overallRating,
+        timestamp: new Date().toISOString(),
+        recommendations: recommendations.map(({ album_cover, ...rest }) => rest), 
+        original: currentPlaylist
+      });
+      // Here you can add logic to send this rating to your backend
+      console.log(`Overall rating submitted: ${overallRating}`);
+    } else {
+      console.log('No rating submitted');
+    }
+  };
+
+
+const sendSessionData = async (sessionData) => {
+  try {
+    const response = await fetch('/api/session', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        page: 'opposite_playlist',
+        data: sessionData, // No need to stringify this again, as it's part of the overall object being stringified
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.error}`);
+    }
+
+    const result = await response.json();
+    console.log('Session data sent successfully:', result);
+  } catch (error) {
+    console.error('Error sending session data:', error);
+  }
+};
+
+
+
+  // When the component unmounts or before the page changes, send the user data
+  useEffect(() => {
+    // Record the start time when the component mounts
+    const start = new Date().toISOString();
+    setSessionStart(start);
+
+    // Return a function to execute when the component unmounts
+    return () => {
+  
+    };
+  }, []);
+
   const navigateToMainMenu = () => {
+    const end = new Date().toISOString();
+    setSessionEnd(end);
+
+    // Send the session data to the server
+    sendSessionData({ session_id:generateSessionId(),
+      start: sessionStart,
+       end , 
+       details:userData});
+
     router.push('/'); // Assuming '/' is your main menu route
   };
   const handleUsernameChange = (event) => {
@@ -35,6 +126,14 @@ export default function GenerateOppositePlaylist() {
 
       const data = await response.json();
       setPlaylists(data);
+
+      logUserAction({
+        action:'fetch_playlists',   
+        timestamp: new Date().toISOString(),
+        username: username,
+        playlistType: playlistType,
+      });
+
     } catch (err) {
       setError("Failed to fetch playlists: " + err.message);
     } finally {
@@ -54,6 +153,15 @@ export default function GenerateOppositePlaylist() {
       const data = await response.json();
       setOriginalPlaylist(data[1])
       setRecommendations(data[0]);
+      setCurrentPlaylist(event.split(':')[2])
+      logUserAction({
+        action:'select_playlist', 
+        timestamp: new Date().toISOString(),
+        username:username,
+        playlistUri: event.split(':')[2],
+        recommendations: data[0].map(({ uri, ...rest }) => uri.split(':')[2])
+
+      });
     } catch (err) {
       setError("Please Try Again");
       console.log(err.message)
@@ -81,9 +189,6 @@ export default function GenerateOppositePlaylist() {
           <span className="tooltiptext">Let's generate an opposite playlist full of song you havent heard before.
             Add you username, pick your playlist and the see the magic happen. </span>
         </div>
-
-
-
 
         <form onSubmit={handleSubmit} className="mb-8">
           <label htmlFor="username" className="block mb-2 text-sm font-bold">
@@ -163,7 +268,33 @@ export default function GenerateOppositePlaylist() {
             </div>
           )
         )}
-
+      {Array.isArray(recommendations) && recommendations.length > 0 && (
+      <div className="rating-section text-center mt-4">
+        <h3 className="text-xl font-bold mb-2">Rate the Recommendations</h3>
+        <div className="flex justify-center items-center">
+        <input
+          type="range"
+          min="1"
+          max="5"
+          step="0.5"
+          value={overallRating}
+          onChange={handleRatingChange}
+          className="rating-slider"
+        />
+        <div className="ml-2 text-lg">{overallRating} {'★'}</div>
+      </div>
+      <button
+            className="px-4  font-bold custom-rounded-btn py-2 bg-spotify-green rounded hover:bg-spotify-green-darker"
+            onClick={handleRatingSubmission}
+        disabled={overallRating === 0}
+      >
+        Submit Rating
+      </button>
+      </div>
+    )}
+    <p>
+           
+    </p>
 <div className="flex-center placeholder-generated-playlist bg-spotify-black text-spotify-white p-4 rounded-lg">         
  {Array.isArray(recommendations) && minLength > 0 ?
             <h2 className="w-full text-center text-xl font-bold mb-4"> Opposite Playlist VS Original Playlist</h2>

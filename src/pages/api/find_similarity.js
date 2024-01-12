@@ -84,6 +84,12 @@ const euclideanDistance = (vecA, vecB) => {
 };
 
 // Example usage
+const adjustedSimilarity = (similarity)=>{
+    const adjust = similarity - 70
+    if (adjust>0){
+      return (adjust / 30) *100
+    }else{return similarity}
+  }
 
 export default async function handler(req, res) {
     if (req.method === 'GET') {
@@ -122,7 +128,7 @@ export default async function handler(req, res) {
             const infoB = await getSpotifyUserInfo(usernameB)
 
             return res.status(200).json({
-                success: true, similarity: distance, users: {
+                success: true, similarity:adjustedSimilarity(distance *100), users: {
                     userA: {
                         info: infoA,
                         genres: genresA

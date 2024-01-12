@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 const ProgressBar = ({ similarity, loading }) => {
+
+  
   const [currentWidth, setCurrentWidth] = useState(0);
 
   useEffect(() => {
@@ -31,12 +33,6 @@ const ProgressBar = ({ similarity, loading }) => {
   );
 };
 
-const adjustedSimilarity = (similarity)=>{
-  const adjust = similarity - 70
-  if (adjust>0){
-    return (adjust / 30) *100
-  }else{return similarity}
-}
 
 
 
@@ -65,11 +61,97 @@ const useLoadingMessages = (loading) => {
 
 
 export default function FindSoundSimilarity() {
-  const router = useRouter();
-  const [payload,setPayload] = useState({});
+  function generateSessionId() {
+    return window.crypto.randomUUID();
+  }
+  
+  const [userData, setUserData] = useState([]);
+  const [sessionStart, setSessionStart] = useState(null);
+  const [sessionEnd, setSessionEnd] = useState(null);
+
+
+  const sendSessionData = async (sessionData) => {
+    try {
+      const response = await fetch('/api/session', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          page: 'find_similarity',
+          session: sessionData.end,
+          data: sessionData, // No need to stringify this again, as it's part of the overall object being stringified
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.error}`);
+      }
+  
+      const result = await response.json();
+      console.log('Session data sent successfully:', result);
+    } catch (error) {
+      console.error('Error sending session data:', error);
+    }
+  };
+
   const navigateToMainMenu = () => {
+    const end = new Date().toISOString();
+    setSessionEnd(end);
+
+    // Send the session data to the server
+    sendSessionData({ session_id:generateSessionId(),
+      start: sessionStart,
+       end , 
+       details:userData});
+
+
     router.push('/'); // Assuming '/' is your main menu route
   };
+
+  const logUserAction = (action) => {
+    setUserData(prevData => [
+      ...prevData,
+      {
+        action,
+      }
+    ]);
+  };
+  const [overallRating, setOverallRating] = useState(null);
+   const handleRatingChange = (event) => {
+    setOverallRating(event.target.value);
+  };
+  const handleRatingSubmission = () => {
+    if (overallRating != null) {
+      logUserAction('rate_overall_recommendations', {
+        usernameA:usernameA,
+        usernameB:usernameB,
+        overallRating,
+        timestamp: new Date().toISOString(),
+        genresA: payload.userA.genres,
+        genresB: payload.userB.genres,
+
+      });
+      // Here you can add logic to send this rating to your backend
+      console.log(`Overall rating submitted: ${overallRating}`);
+    } else {
+      console.log('No rating submitted');
+    }
+  };
+
+  useEffect(() => {
+    // Record the start time when the component mounts
+    const start = new Date().toISOString();
+    setSessionStart(start);
+
+    // Return a function to execute when the component unmounts
+    return () => {
+  
+    };
+  }, []);
+  const router = useRouter();
+  const [payload,setPayload] = useState({});
+
   const [usernameA, setUsernameA] = useState('');
   const [usernameB, setUsernameB] = useState('');
   const [loading, setLoading] = useState(false);
@@ -103,9 +185,16 @@ export default function FindSoundSimilarity() {
       const result = await response.json();
       if (result.success) {
         // Handle the successful response here
-        setSimilarity(result.similarity*100)
+        setSimilarity(result.similarity)
         setPayload(result.users)
-        console.log(result.users)
+        logUserAction({action:'got_similarity', 
+          usernameA:usernameA,
+          usernameB:usernameB,
+          similarity:result.similarity,
+          timestamp: new Date().toISOString(),
+          genresA: result.users.userA.genres,
+          genresB: result.users.userB.genres
+        });
 
       } else {
         throw new Error(result.error);
@@ -117,9 +206,19 @@ export default function FindSoundSimilarity() {
     }
   };
   const getRandomGenres = (genres) => {
-    const shuffled = [...genres].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 7);
+    // Convert the genres object into an array of [genre, count] pairs
+    const genresArray = Object.entries(genres);
+
+    // Sort the array based on the count, in descending order
+    genresArray.sort((a, b) => b[1] - a[1]);
+
+    // Slice the first 7 genres from the sorted array
+    const topGenres = genresArray.slice(0, 7);
+
+    // Return only the genre names
+    return topGenres.map(genrePair => genrePair[0]);
 };
+
 
   
 
@@ -176,7 +275,7 @@ export default function FindSoundSimilarity() {
 
         {/* Display loading messages */}
         {loading && <p className="text-spotify-green">{loadingMessage}</p>}
-        {!loading && <ProgressBar similarity={adjustedSimilarity(similarity)} loading={loading} />}
+        {!loading && <ProgressBar similarity={similarity} loading={loading} />}
         <div className="container mx-auto p-4">
             {!loading && similarity > 0 && (
                 <>
@@ -202,6 +301,33 @@ export default function FindSoundSimilarity() {
                 </>
             )}
         </div>
+        {similarity > 0 && (
+      <div className="rating-section text-center mt-4">
+        <h3 className="text-xl font-bold mb-2">Rate the Similarity</h3>
+        <div className="flex justify-center items-center">
+        <input
+          type="range"
+          min="1"
+          max="5"
+          step="0.5"
+          value={overallRating}
+          onChange={handleRatingChange}
+          className="rating-slider"
+        />
+        <div className="ml-2 text-lg">{overallRating} {'★'}</div>
+      </div>
+      <button
+            className="px-4  font-bold custom-rounded-btn py-2 bg-spotify-green rounded hover:bg-spotify-green-darker"
+            onClick={handleRatingSubmission}
+        disabled={overallRating === 0}
+      >
+        Submit Rating
+      </button>
+      </div>
+    )}
+    <p>
+           
+    </p>
       </main>
     </div>
 

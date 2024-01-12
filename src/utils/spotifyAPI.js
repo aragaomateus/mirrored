@@ -487,10 +487,13 @@ async function calculateAverageAudioFeatures(artistId) {
 
         // Use flatMap to flatten the array of arrays into a single array
         // and then create a Set from it to eliminate duplicates
-        const genres = new Set(data.artists.flatMap(artist => artist.genres));
+        const genreCounts = data.artists.flatMap(artist => artist.genres)
+                                        .reduce((acc, genre) => {
+                                            acc[genre] = (acc[genre] || 0) + 1;
+                                            return acc;
+                                        }, {});
 
-        // Convert the Set back to an array if needed
-        return Array.from(genres);
+        return genreCounts;
     } catch (error) {
         console.error('Error fetching artists info:', error);
         return [];

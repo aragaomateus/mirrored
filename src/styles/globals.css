@@ -182,3 +182,17 @@ body {
     line-height: 0.75rem; /* Tighter line-height for mobile */
   }
 }
+
+.language-toggle {
+  padding: 0.5em 1em;
+  border: none;
+  background-color: white;
+  color: var(--spotify-green);
+  border-radius: 15px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.language-toggle.isEnglish {
+  background-color: var(--spotify-green);
+  color: white;
+}

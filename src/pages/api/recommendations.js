@@ -107,6 +107,8 @@ function average(array) {
     return array.reduce((sum, val) => sum + val, 0) / array.length;
 }
 
+
+
 async function getOppositePlaylist(ids, centroid) {
     const jsonData = await fetchJSONData()
 
@@ -126,6 +128,7 @@ async function getOppositePlaylist(ids, centroid) {
         }
     }else{
         const opposites =cleanArray(findOpposite(ids, data, 5));
+
         console.log('opposites',opposites)
         const params = {
             target_danceability: 1 - centroid.danceability,

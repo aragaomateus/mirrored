@@ -188,8 +188,8 @@ const handleSubmit = async (event) => {
                     <button
                       type="button"
                       onClick={handleAddArtist}
-                      className="w-1/2 p-2 bg-spotify-green text-md rounded hover:bg-spotify-green-darker mx-auto"
-                    >
+                      className="w-1/2 p-2 font-bold custom-rounded-btn bg-spotify-green text-md rounded hover:bg-spotify-green-darker mx-auto"
+                      >
                       Add
                     </button>
                   </div>
@@ -226,7 +226,7 @@ const handleSubmit = async (event) => {
     <button
       type="button"
       onClick={handleCreatePlaylist}
-      className="w-1/2 p-2 bg-spotify-green text-md rounded hover:bg-spotify-green-darker mt-4" // Use w-1/2 for half width
+      className="w-1/2 p-2 font-bold custom-rounded-btn bg-spotify-green  text-md rounded hover:bg-spotify-green-darker mt-4" // Use w-1/2 for half width
       disabled={loading || playlistName.trim() === ''}
     >
       {loading ? "Creating..." : "Create Playlist"}
@@ -246,7 +246,7 @@ const handleSubmit = async (event) => {
         {newPlaylist.length > 0 && (
           <div className="mt-6 text-center">
             <h2 className="text-xl font-bold mb-4">
-              Playlist "{playlistName}" for {userInfo.display_name}
+               {playlistName} for {userInfo.display_name}
             </h2>
             <div className="space-y-4">
               {newPlaylist.map((recommendation, index) => (
