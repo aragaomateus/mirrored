@@ -500,10 +500,71 @@ async function calculateAverageAudioFeatures(artistId) {
     }
 }
 
+async function createPlaylist(name, origin, recommendations) {
+    const accessToken = await refreshAccessToken(); // Get a fresh access token
+  
+    const playlistName = `${origin} for ${name}`;
+    const playlistDescription = "Generated based on opposite playlist recommendations.";
+    const publicSetting = false;
+  
+    const data = {
+      name: playlistName,
+      description: playlistDescription,
+      public: publicSetting,
+    };
+  
+    // Create the playlist
+    try {
+        // we need to hard code my own username in here 
+      const playlistResponse = await fetch(`https://api.spotify.com/v1/users/aragaosm/playlists`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+  
+      const playlistInfo = await playlistResponse.json();
+    //   console.log(playlistInfo);
+  
+      if (playlistInfo && playlistInfo.id) {
+        console.log(`Playlist ID: ${playlistInfo.id}`);
+        console.log("Playlist created successfully!");
+  
+        // Add tracks to the created playlist
+        const addTracksEndpoint = `/playlists/${playlistInfo.id}/tracks`;
+        const tracksData = {
+            uris:recommendations
+        //   uris: recommendations.map(rec => rec.uri),
+        
+        };
+  
+        const tracksResponse = await fetch(`https://api.spotify.com/v1${addTracksEndpoint}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(tracksData)
+        });
+  
+        const responseJson = await tracksResponse.json();
+        if (responseJson.snapshot_id) {
+          console.log("Tracks added successfully!");
+          return {playlistInfo,responseJson} 
+        } else {
+          throw new Error("Error in adding tracks.");
+        }
+      } else {
+        throw new Error("Error in creating playlist.");
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
+  }
+  
+
+
 
 
 // Exporting the functions to be used in other files
 module.exports = {
+    createPlaylist,
     getMultipleArtistsInfo,
     calculateAverageAudioFeatures,
     getArtistTracks,

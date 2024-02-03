@@ -17,14 +17,28 @@ export default function CustomPlaylist() {
   const [uriList, setURIList] = useState([]); // State for the list of artists
   const [playlistName, setPlaylistName] = useState(''); // State for the playlist name input
   const [newPlaylist, setNewPlaylist] = useState([])
+  const [userInfo, setUserInfo] = useState(null);
+  const [newPlaylistLink,setNewPlaylistLink] =useState('');
+
+  useEffect(() => {
+    if (artistList.length === 0) {
+      setURIList([]);
+      setNewPlaylist([]);
+      setPlaylistName('');
+      setNewPlaylistLink('');
+      // Any other related state variables should be reset here as well
+    }
+  }, [artistList]); // This effect depends on artistList
+
   const handleRemoveArtist = (indexToRemove) => {
     // Remove artist by index
     setArtistList(artistList.filter((_, index) => index !== indexToRemove));
     // Remove URI by index
     setURIList(uriList.filter((_, index) => index !== indexToRemove));
   };
+
   // Function to handle creating the playlist
-  const handleCreatePlaylist = async () => {
+  const handleGetSuggestion = async () => {
     setLoading(true);
     setError('');
 
@@ -35,7 +49,7 @@ export default function CustomPlaylist() {
     };
 
     try {
-      const response = await fetch('/api/create_playlist', {
+      const response = await fetch('/api/song_suggestions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,6 +71,49 @@ export default function CustomPlaylist() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCreatePlaylist =async() =>{
+        // Add the artistName to the artistList if it's not empty or already present
+        const tracks = Array(newPlaylist.map(recommendation => recommendation.uri));
+        
+        const name = userInfo.display_name
+        const query = new URLSearchParams({ name ,playlistName,tracks }).toString();
+
+        try {
+    
+          const response = await fetch(`/api/create_playlist?${query}`, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+            },
+          });
+      
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+      
+          const result = await response.json();
+          console.log('result',result.external_urls.spotify)
+
+          if (result) {
+            console.log('result',result.external_urls.spotify)
+            setNewPlaylistLink(result.external_urls.spotify)
+
+            // Handle the successful response here
+            // if (artistName && !artistList.includes(result.name)&& !uriList.includes(result.uri)) {
+            //   setArtistList([...artistList, result.name]);
+            //   setArtistName(''); // Clear input after adding
+            //   setURIList([...uriList,result.uri.split(':')[2]])
+            //   console.log(uriList)
+            // }
+            } else {
+            throw new Error(result.error);
+          }
+        } catch (error) {
+          setError(error.message);
+        }
+
   };
   // Function to handle adding an artist to the list
   const handleAddArtist = async () => {
@@ -95,7 +152,6 @@ export default function CustomPlaylist() {
     }
   };
 // Inside your React component
-const [userInfo, setUserInfo] = useState(null);
 useEffect(() => {
   if (userInfo) {
     console.log(userInfo);
@@ -188,25 +244,27 @@ const handleSubmit = async (event) => {
                     <button
                       type="button"
                       onClick={handleAddArtist}
-                      className="w-1/2 p-2 font-bold custom-rounded-btn bg-spotify-green text-md rounded hover:bg-spotify-green-darker mx-auto"
-                      >
+                      className="w-1/3 p-1 font-bold custom-rounded-btn bg-spotify-green text-sm rounded hover:bg-spotify-green-darker mx-auto"
+                    >
                       Add
                     </button>
                   </div>
             {/* List of added artists */}
-            <ul className="mt-4">
-    {artistList.map((artist, index) => (
-      <li key={index} className="flex justify-between items-center p-2 bg-spotify-green rounded shadow my-1">
-        <span className="ml-2">{artist}</span>
-        <button
-          onClick={() =>  handleRemoveArtist(index)}
-          className="bg-red-500 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center ml-4"
-        >
-          × {/* This is a multiplication symbol (U+00D7), often used to represent a close or delete action */}
-        </button>
-      </li>
-    ))}
-  </ul>
+            <div className="artist-list-container mt-4 bg-black bg-opacity-50 rounded p-4 max-w-md mx-auto">
+            <div className="grid grid-flow-row auto-rows-max grid-cols-auto-fit gap-3">
+                  {artistList.map((artist, index) => (
+                    <div key={index} className="bg-spotify-green rounded shadow flex items-center justify-between p-3">
+                      <span className="text-base truncate">{artist}</span> {/* Increase text size */}
+                      <button
+                        onClick={() => handleRemoveArtist(index)}
+                        className="bg-red-500 hover:bg-red-700 text-white rounded-full w-5 h-5 flex items-center justify-center ml-2 text-xs" 
+                      >
+                        × {/* Consider using an icon for better visibility at smaller sizes */}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
           </>
         )} 
@@ -225,17 +283,17 @@ const handleSubmit = async (event) => {
     {/* Create Playlist button */}
     <button
       type="button"
-      onClick={handleCreatePlaylist}
+      onClick={handleGetSuggestion}
       className="w-1/2 p-2 font-bold custom-rounded-btn bg-spotify-green  text-md rounded hover:bg-spotify-green-darker mt-4" // Use w-1/2 for half width
       disabled={loading || playlistName.trim() === ''}
     >
-      {loading ? "Creating..." : "Create Playlist"}
+      {loading ? "Suggesting..." : "Get Suggestions"}
     </button>
   </div>
 )}
 
         {/* Error message display */}
-        {error && <div className="text-red-500">{error}</div>}
+        {/* {error && <div className="text-red-500">{error}</div>} */}
 
 
       </div>
@@ -243,11 +301,33 @@ const handleSubmit = async (event) => {
 
       </div>
         {/* Playlist recommendations */}
-        {newPlaylist.length > 0 && (
+        {artistList.length > 0 && newPlaylist.length > 0 && (
           <div className="mt-6 text-center">
             <h2 className="text-xl font-bold mb-4">
                {playlistName} for {userInfo.display_name}
             </h2>
+
+            <button
+                type="button"
+                onClick={handleCreatePlaylist}
+                className="w-1/2 p-2 font-bold custom-rounded-btn bg-spotify-green text-md rounded hover:bg-spotify-green-darker mt-4" // Use w-1/2 for half width
+                disabled={loading || playlistName.trim() === ''}
+              >
+                {loading ? "Creating..." : "Create Playlist?"}
+              </button>
+
+              {/* Display the new playlist link directly below the button */}
+              {newPlaylistLink.length > 0 ? (
+                <div className="mt-4">
+                  <a href={newPlaylistLink} className="text-spotify-green hover:underline">Open Playlist</a>
+                </div>
+              ):('')}
+
+
+
+
+
+
             <div className="space-y-4">
               {newPlaylist.map((recommendation, index) => (
                 <div key={index} className="flex items-center justify-center p-2 bg-spotify-green rounded shadow-lg">

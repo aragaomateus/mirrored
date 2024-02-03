@@ -196,3 +196,7 @@ body {
   background-color: var(--spotify-green);
   color: white;
 }
+
+.grid-cols-auto-fit {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
