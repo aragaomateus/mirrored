@@ -11,6 +11,8 @@ export default function GenerateOppositePlaylist() {
   const [playlists, setPlaylists] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingCreate, setLoadingCreate] = useState(false);
+
   const [error, setError] = useState('');
   const [originalPlaylist, setOriginalPlaylist] = useState([]);
   const router = useRouter();
@@ -19,6 +21,10 @@ export default function GenerateOppositePlaylist() {
   const [sessionEnd, setSessionEnd] = useState(null);
   const [overallRating, setOverallRating] = useState(null);
   const [currentPlaylist,setCurrentPlaylist] = useState('');
+  const [newPlaylistLink,setNewPlaylistLink] =useState('');
+  const [selectedPlaylist,setPlaylist] = useState('');
+
+  const [userInfo,setUserInfo] = useState(null)
 
   function generateSessionId() {
     return window.crypto.randomUUID();
@@ -112,7 +118,40 @@ const sendSessionData = async (sessionData) => {
 
   const handlePlaylistTypeChange = (event) => {
     setPlaylistType(event.target.value);
+
   };
+
+
+  const getUserInfo = async ()=>{
+    const query = new URLSearchParams({ username }).toString();
+
+    try {
+      console.log(username)
+      const response = await fetch(`/api/get_user?${query}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const result = await response.json();
+  
+      if (result) {
+        // Handle the successful response here
+        setUserInfo(result)
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -133,6 +172,7 @@ const sendSessionData = async (sessionData) => {
         username: username,
         playlistType: playlistType,
       });
+      getUserInfo()
 
     } catch (err) {
       setError("Failed to fetch playlists: " + err.message);
@@ -141,24 +181,74 @@ const sendSessionData = async (sessionData) => {
     }
   };
 
+  const handleCreatePlaylist =async() =>{
+    setLoadingCreate(true);
+
+    // Add the artistName to the artistList if it's not empty or already present
+    const tracks = Array(recommendations.map(recommendation => recommendation.uri));
+    
+    // const name = userInfo.display_name
+    const playlistName = "Opposite Playlist of " + selectedPlaylist + " "
+    console.log(userInfo.display_name)
+    const name = userInfo.display_name
+    const query = new URLSearchParams({ name ,playlistName,tracks }).toString();
+
+    try {
+
+      const response = await fetch(`/api/create_playlist?${query}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const result = await response.json();
+      console.log('result',result.external_urls.spotify)
+
+      if (result) {
+        console.log('result',result.external_urls.spotify)
+        setNewPlaylistLink(result.external_urls.spotify)
+
+        // Handle the successful response here
+        // if (artistName && !artistList.includes(result.name)&& !uriList.includes(result.uri)) {
+        //   setArtistList([...artistList, result.name]);
+        //   setArtistName(''); // Clear input after adding
+        //   setURIList([...uriList,result.uri.split(':')[2]])
+        //   console.log(uriList)
+        // }
+        } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      setError(error.message);
+    }
+
+};
+
   const handlePlaylistSelection = async (event) => {
     setLoading(true);
     setError('');
-
+    setRecommendations([])
+    setNewPlaylistLink('')
+    setPlaylist(event.name)
     try {
       // Update the endpoint as necessary based on your API route setup
-      const response = await fetch(`/api/recommendations?uri=${encodeURIComponent(event)}`);
+      const response = await fetch(`/api/recommendations?uri=${encodeURIComponent(event.uri)}`);
       if (!response.ok) throw new Error("Network response was not ok.");
 
       const data = await response.json();
       setOriginalPlaylist(data[1])
       setRecommendations(data[0]);
-      setCurrentPlaylist(event.split(':')[2])
+      setCurrentPlaylist(event.uri.split(':')[2])
       logUserAction({
         action:'select_playlist', 
         timestamp: new Date().toISOString(),
         username:username,
-        playlistUri: event.split(':')[2],
+        playlistUri: event.uri.split(':')[2],
         recommendations: data[0].map(({ uri, ...rest }) => uri.split(':')[2])
 
       });
@@ -176,13 +266,13 @@ const sendSessionData = async (sessionData) => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
-      <button
-        onClick={navigateToMainMenu}
-        className="fixed font-bold custom-rounded-btn top-0 left-0 mt-4 ml-4 px-4 py-2 bg-spotify-green rounded hover:bg-spotify-green-darker text-sm z-10" 
-      >
-        Back
-      </button>
-      <main className="container mx-auto p-4">
+    <button
+      onClick={navigateToMainMenu}
+      className="fixed font-bold custom-rounded-btn top-0 left-0 mt-4 ml-4 px-4 py-2 bg-spotify-green rounded hover:bg-spotify-green-darker text-sm z-10"
+    >
+      Back
+    </button>
+    <main className="container mx-auto p-4 pb-20">
         <div className="tooltip">
           <h1 className="text-3xl font-bold mb-4 inline-block">Songs We Know You Will Hate</h1>
           <div className="question-mark-circle">&#63;</div> {/* Unicode for question mark */}
@@ -259,7 +349,7 @@ const sendSessionData = async (sessionData) => {
                   <button
                     key={index}
                     className="playlist bg-black hover:bg-opacity-50 text-white py-1 px-2 text-sm rounded shadow"
-                    onClick={() => handlePlaylistSelection(playlist.uri)} // Define this function to handle click
+                    onClick={() => handlePlaylistSelection(playlist)} // Define this function to handle click
                   >
                     {playlist.name}
                   </button>
@@ -268,38 +358,60 @@ const sendSessionData = async (sessionData) => {
             </div>
           )
         )}
-      {Array.isArray(recommendations) && recommendations.length > 0 && (
-      <div className="rating-section text-center mt-4">
-        <h3 className="text-xl font-bold mb-2">Rate the Recommendations</h3>
-        <div className="flex justify-center items-center">
-        <input
-          type="range"
-          min="1"
-          max="5"
-          step="0.5"
-          value={overallRating}
-          onChange={handleRatingChange}
-          className="rating-slider"
-        />
-        <div className="ml-2 text-lg">{overallRating} {'★'}</div>
-      </div>
-      <button
-            className="px-4  font-bold custom-rounded-btn py-2 bg-spotify-green rounded hover:bg-spotify-green-darker"
-            onClick={handleRatingSubmission}
-        disabled={overallRating === 0}
-      >
-        Submit Rating
-      </button>
-      </div>
-    )}
-    <p>
-           
-    </p>
+{Array.isArray(recommendations) && recommendations.length > 0 && (
+  <div className="rating-section text-center mt-4 mb-8">
+    <h3 className="text-xl font-bold mb-2">Rate the Recommendations</h3>
+    <div className="flex justify-center items-center">
+      <input
+        type="range"
+        min="1"
+        max="5"
+        step="0.5"
+        value={overallRating}
+        onChange={handleRatingChange}
+        className="rating-slider"
+      />
+      <div className="ml-2 text-lg">{overallRating} {'★'}</div>
+    </div>
+    <button
+      className="px-4 font-bold custom-rounded-btn py-2 bg-spotify-green rounded hover:bg-spotify-green-darker"
+      onClick={handleRatingSubmission}
+      disabled={overallRating === 0}
+    >
+      Submit Rating
+    </button>
+  </div>
+)}
+
 <div className="flex-center placeholder-generated-playlist bg-spotify-black text-spotify-white p-4 rounded-lg">         
- {Array.isArray(recommendations) && minLength > 0 ?
-            <h2 className="w-full text-center text-xl font-bold mb-4"> Opposite Playlist VS Original Playlist</h2>
-            : " "
-          }
+{Array.isArray(recommendations) && minLength > 0 && (
+  <>
+
+
+    <div className="mt-6 text-center mb-8">
+    <h2 className="w-full text-center text-xl font-bold mb-4">Opposite Playlist VS Original Playlist</h2>
+
+        <button
+          type="button"
+          onClick={handleCreatePlaylist}
+          className="w-1/2 p-2 font-bold custom-rounded-btn bg-spotify-green text-md rounded hover:bg-spotify-green-darker mt-4"
+          disabled={loading}
+        >
+          {loading ? "Creating..." : "Create Playlist?"}
+        </button>
+      </div>
+
+  </>
+)}
+
+{newPlaylistLink.length > 0 && (
+        <div className="w-full text-center mt-4 mb-8">
+          <a href={newPlaylistLink} className="text-spotify-green hover:underline">
+            Open Playlist
+          </a>
+        </div>
+      )}
+ 
           <div className="playlist-list">
             {!Array.isArray(recommendations) ? <h3 className="text-red-500 font-bold">Please Select the Playlist Again</h3>
               :
